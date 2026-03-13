@@ -1,0 +1,7 @@
+
+services:
+    hh_grabber:
+        image: hh_grabber:0.1
+        build: hh_grabber
+        ports:
+            - "8000:8000"
