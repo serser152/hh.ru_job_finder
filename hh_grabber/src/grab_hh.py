@@ -16,8 +16,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import pandas as pd
+#######################################
+#           Login utils               #
+#######################################
 
-# Login utils
 driver = None
 
 def find_n_click(txt):
@@ -74,8 +76,6 @@ def login(phone='9200123456', password='123456'):
     sleep(3)
 
 
-# In[7]:
-
 
 def send_find_request(txt):
     res= driver.find_elements(By.TAG_NAME,'input')
@@ -85,10 +85,9 @@ def send_find_request(txt):
             break
     find_n_click('Найти')
 
-
-# # parsing functions
-
-# In[88]:
+########################################
+# # parsing functions                 #
+#######################################
 
 
 def find_by_qa(qa_txt):
@@ -100,37 +99,6 @@ def find_by_qa2(txt):
         return None
 
 
-
-
-
-def get_description():
-    '''parse vacancy details description page'''
-
-    #print('switch tab')
-    original_window=driver.current_window_handle
-
-    for w in driver.window_handles:
-        if w != original_window:
-            driver.switch_to.window(w)
-            break
-    #print('parsing desc')
-    sleep(1)
-    d = {
-        'vac_title': find_by_qa2('vacancy-title'),
-        'vac_salary': find_by_qa2('vacancy-salary'),
-        'vac_exp': find_by_qa2('work-expirience-text'),
-        'vac_emp': find_by_qa2('common-employment-text'),
-        'vac_hiring_format': find_by_qa2('vacancy-hiring-format'),
-        'vac_working_hours': find_by_qa2('working-hours-text'),
-        'vac_work_format': find_by_qa2('work-formats-text'),
-        'vac_descr': find_by_qa2('vacancy-description')
-    }
-
-    #print('switch back')
-    driver.close()
-
-    driver.switch_to.window(original_window)
-    return d
 
 def parse_card(r):
     ''' parse job card. Click and parse details'''
@@ -151,18 +119,8 @@ def parse_card(r):
         'tags': tags,
         'company': company,
         'status': status,
-        'description': ''
     }
     sleep(1)
-    try:
-        r2 = r.find_element(By.TAG_NAME,'h2')
-        r2.click()
-        #driver.execute_script("arguments[0].click();", r2)
-        wait = WebDriverWait(driver,2)
-        wait.until(EC.number_of_windows_to_be(2))
-        d['description'] = get_description()
-    except Exception as e:
-        print('error parsing description:', e)
     return d
 
 def get_last_page():
@@ -201,6 +159,32 @@ def parse_page(n=1, skip_click=False):
     parse_page_content()
 
 
+def get_description(vac_id):
+    '''parse vacancy details description page'''
+
+    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    sleep(1)
+    d = {
+        'vac_id': vac_id,
+        'vac_title': find_by_qa2('vacancy-title'),
+        'vac_salary': find_by_qa2('vacancy-salary'),
+        'vac_exp': find_by_qa2('work-expirience-text'),
+        'vac_emp': find_by_qa2('common-employment-text'),
+        'vac_hiring_format': find_by_qa2('vacancy-hiring-format'),
+        'vac_working_hours': find_by_qa2('working-hours-text'),
+        'vac_work_format': find_by_qa2('work-formats-text'),
+        'vac_descr': find_by_qa2('vacancy-description')
+    }
+
+    return d
+
+def get_descriptions_by_ids(vac_ids):
+    '''get vacancy details for all vacancy ids'''
+    descrs=[]
+    for i in tqdm(vac_ids):
+        descrs.append(get_description(i))
+    return descrs
+
 data=[]
 
 def grep_results():
@@ -217,74 +201,30 @@ def grep_results():
 
 
 
-# find n click on vacancy
-
-def click_card_if_id(r,vid):
-    res=r.find_elements(By.TAG_NAME,'div')
-    for t in res:
-        if t.get_attribute('class').startswith('vacancy-card--'):
-            vac_id = t.get_property('id')
-    print('vac_id = ', vac_id)
-    if str(vac_id) == str(vid):
-        print('Card found')
-        for t in res:
-            if t.get_attribute('class').startswith('vacancy-card-footer'):
-                res2 = t.find_element(By.TAG_NAME,'a')
-                print(res2.text)
-                res2.click()
-                sleep(2)
-                print('click')
-                return True # card found
-    return False # continue search
-
-def find_n_click_cards_on_page(vid):
-    '''parsing vacancy card from search results'''
-    global data
-    res = find_by_qa("vacancy-serp__vacancy")
-    for r in tqdm(res):
-        if click_card_if_id(r, vid):
-            return True # found card
-    print('not found on page')
-    return False # continue search
-
-
-def click_by_id_on_page(n, skip_click, vid):
-    '''
-    click to respond on a vacancy.
-    vid - vacancy id
-    '''
-    '''Parsing page of search results'''
-    print('find page ',n)
-    if not skip_click:
-        ii=driver.find_element(By.TAG_NAME,'nav').find_elements(By.TAG_NAME,'li')
-        pages=[iii for iii in ii]
-        for p in pages:
-            if p.text == str(n):
-                break
-        p.click()
-        sleep(2)
-    return find_n_click_cards_on_page(vid)
-
 
 data=[]
 
-def click_by_id(vid):
+
+##########################
+# respond to vacancy    #
+##########################
+
+def click_by_id(vac_id):
     '''
     click to respond on a vacancy.
     vid - vacancy id
     '''
-    global data
-    driver.switch_to.window(driver.window_handles[0])
+    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    sleep(1)
 
-    last_page = get_last_page()
-    print(f'total {last_page} pages')
-    for i in tqdm(range(0,last_page)):
-        if click_by_id_on_page(i+1, last_page==1, vid):
-            return True
-    return False
+    r = find_by_qa2('vacancy-response-link-top')
+    r.click()
+    sleep(2)
 
 
-# process parsed data
+############################
+# process parsed data     #
+############################
 
 def process_results(data, req='ds'):
     df = pd.DataFrame(data)
@@ -294,8 +234,6 @@ def process_results(data, req='ds'):
     df.loc[df['status'].str.startswith('Вам отказали'),'status']='Вам отказали'
     df.loc[df['status'].str.startswith('Вы откликнулись'),'status']='Вы откликнулись'
     df.loc[df['status'].str.startswith('Вас пригласили'),'status']='Вас пригласили'
-
-
 
     def parse_tags(x):
         l=x['tags'].split('\n')
@@ -312,47 +250,54 @@ def process_results(data, req='ds'):
                 x['remote']=i
         return x
 
-
     df2=df.apply(parse_tags,axis=1)
-
-
     df2.drop(columns=['tags'], inplace=True)
+    return df2
 
-    if df2[df2['description'].isna()].shape[0]/df2.shape[0] > 0.05:
-#        raise Exception('Failed scraping description. Errors rate > 5%')
-        print('Failed scraping description. Errors rate > 5%')
 
-    df22=pd.json_normalize(df2['description'])
-    df3 = df2.join(df22)
-    df3.drop('description',axis=1, inplace=True)
-    return df3
 def save2pg(pg_connection,data):
     #con='postgresql://postgres:postgres@localhost:5433/public'
     df3.to_sql(f'hh_{req}', pg_connection, if_exists='append', index=False)
 
+#########################
+#   External functions #
+########################
+
+
 def get_vacancies(phone, password, request):
-    print('login')
-    login(phone, password)
-    print('searching')
-    send_find_request(request)
-    print('collecting results')
-    data=grep_results()
-    df = process_results(data, 'ds')
-    print(df)
-    print('exit')
-    driver.quit()
+    ''' get vacancies for request'''
+    try:
+        login(phone, password)
+        send_find_request(request)
+        data=grep_results()
+        df = process_results(data, 'ds')
+        driver.quit()
+    except Exception as e:
+        print(e)
+        driver.quit()
+        df = None
     return df
 
-
-def accept_vacancy(phone, password, request, vacancy_id):
-    ''' click reply vacancy by vacancy id and request'''
-    print('login')
-    login(phone, password)
-    print('searching')
-    send_find_request(request)
-    print('find and click vacancy')
-    res = click_by_id(vacancy_id)
-    driver.quit()
+def get_descriptions(phone, password, vacancy_ids):
+    ''' get vacancy details for all vacancy ids'''
+    try:
+        login(phone, password)
+        res = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
+        driver.quit()
+    except Exception as e:
+        print(e)
+        driver.quit()
+        res = None
     return res
+
+def accept_vacancy(phone, password, vacancy_ids):
+    ''' click reply vacancy by vacancy id and request'''
+    try:
+        login(phone, password)
+        for vacancy_id in vacancy_ids:
+            click_by_id(vacancy_id)
+    except Exception as e:
+        print(e)
+    driver.quit()
 
 

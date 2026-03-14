@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from fastapi import FastAPI
 from pydantic import BaseModel
-from .grab_hh import get_vacancies, accept_vacancy
+from .grab_hh import get_vacancies, accept_vacancy, get_descriptions
 import json
+
 
 class SearchRequest(BaseModel):
     phone: str
@@ -12,8 +13,12 @@ class SearchRequest(BaseModel):
 class AcceptRequest(BaseModel):
     phone: str
     password: str
-    request: str
-    vacancy_id: int
+    vacancy_ids: list
+
+class GetDescriptionRequest(BaseModel):
+    phone: str
+    password: str
+    vacancy_ids: list
 
 app = FastAPI(host='0.0.0.0')
 
@@ -27,10 +32,15 @@ async def find_vacancies(request: SearchRequest):
     df = get_vacancies(request.phone, request.password, request.request)
     return df.to_json(orient='records')
 
-@app.post('/accept_vacancy')
-async def accept_vacancy_by_id(request: AcceptRequest):
-    print('accept vacancies '+request.request+' '+str(request.vacancy_id))
-    res = accept_vacancy(request.phone, request.password, request.request, request.vacancy_id)
-    return str(res)
+@app.post('/get_vacancy_descriptions')
+async def get_desc(request: GetDescriptionRequest):
+    print('Get descriptions '+str(request.vacancy_ids))
+    res = get_descriptions(request.phone, request.password,  request.vacancy_ids)
+    return res.to_json(orient='records')
 
+@app.post('/accept_vacancy')
+async def accept_vacancy_by_id(request: GetDescriptionRequest):
+    print('accept vacancies '++str(request.vacancy_ids))
+    res = accept_vacancy(request.phone, request.password,  request.vacancy_ids)
+    return str(res)
 
