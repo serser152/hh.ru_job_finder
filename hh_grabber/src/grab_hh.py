@@ -40,7 +40,7 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
-    #options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--start-maximized')
 
     driver = selenium.webdriver.Chrome(options=options)
