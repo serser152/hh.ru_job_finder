@@ -2,11 +2,21 @@
 services:
 
   hh_grabber:
-    image: hh_grabber:0.2
+    image: hh_grabber:0.3
     build: hh_grabber
     ports:
       - "8000:8000"
-      
+
+  scheduler:
+    image: scheduler:0.1
+    build: scheduler
+
+  assistant_ui:
+    image: assistant_ui:0.1
+    build: ui
+    ports:
+      - "8501:8501"
+
   grafana:
     image: grafana/grafana-enterprise:latest
     container_name: grafana
@@ -15,7 +25,7 @@ services:
       - '3000:3000'
     volumes:
       - grafana-data:/var/lib/grafana
-      
+
   postgres:
     image: postgres:17
     restart: always
