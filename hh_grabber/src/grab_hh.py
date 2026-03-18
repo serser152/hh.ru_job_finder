@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
-
 
 import selenium.webdriver
-from selenium.webdriver.chrome.options import Options
+#from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -43,7 +42,8 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
 
-    driver = selenium.webdriver.Chrome(options=options)
+    #driver = selenium.webdriver.Chrome(options=options)
+    driver = selenium.webdriver.Firefox(options=options)
 
     driver.get('https://nn.hh.ru')
 

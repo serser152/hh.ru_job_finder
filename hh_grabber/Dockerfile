@@ -1,4 +1,5 @@
-FROM joyzoursky/python-chromedriver:3.8
+#FROM joyzoursky/python-chromedriver:3.8
+FROM selenium/standalone-firefox
 
 WORKDIR /src
 COPY requirements.txt /src
