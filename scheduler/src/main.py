@@ -5,10 +5,9 @@ import requests
 import pandas as pd
 import json
 from time import sleep
-from pytz import utc
-
+from pytz import utc, timezone
+import datetime
 from apscheduler.schedulers.background import BlockingScheduler
-from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
@@ -16,7 +15,8 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
 def grab_hh(phone, password, request):
 
-    res = requests.post('http://localhost:8000/find_vacancies', 
+    con = 'postgresql://postgres:postgres@postgres:5432/public'
+    res = requests.post('http://hh_grabber:8000/find_vacancies', 
                         json={
                           "phone": phone,
 
@@ -32,7 +32,7 @@ def grab_hh(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://localhost:8000/find_vacancies', 
+        res = requests.post('http://hh_grabber:8000/find_vacancies', 
                         json={
                           "phone": phone,
 
@@ -45,15 +45,15 @@ def grab_hh(phone, password, request):
     df = pd.DataFrame(json.loads(d))
     df['dt']=pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds',con='postgresql://postgres:postgres@localhost:5433/public', if_exists='append', index=False)
+    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
 
 
     # grab new vac_ids
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values where vac_id not in (select vac_id from vacancy_descriptions)''', con='postgresql://postgres:postgres@localhost:5433/public')
+    df2 = pd.read_sql('''select vac_id from hh_ds_last_values where vac_id not in (select vac_id from vacancy_descriptions)''', con=con)
 
     vac_ids = df2.vac_id.to_list()
 
-    res = requests.post('http://localhost:8000/get_vacancy_descriptions', 
+    res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions', 
                     json={
                       "phone": phone,
 
@@ -68,7 +68,7 @@ def grab_hh(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://localhost:8000/get_vacancy_descriptions', 
+        res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions', 
                         json={
                           "phone": phone,
 
@@ -81,12 +81,15 @@ def grab_hh(phone, password, request):
     d=res.json()
     df = pd.DataFrame(json.loads(d))
 
-    df.to_sql('vacancy_descriptions',con='postgresql://postgres:postgres@localhost:5433/public', if_exists='append', index=False)
+    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
 
 
 def grab():
     print('grab job started')
-    grab_hh('92001231234', '123', 'data science')
+    con = 'postgresql://postgres:postgres@postgres:5432/public'
+    df = pd.read_sql('''select * from searches''', con=con)
+    for i,row in df.iterrows():
+        grab_hh(row.phone, row.password, row.request)
 
 
 if __name__ == '__main__':
@@ -95,14 +98,20 @@ if __name__ == '__main__':
         'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
     }
     executors = {
-        'processpool': ProcessPoolExecutor(5)
+        'default': ProcessPoolExecutor(5)
     }
     job_defaults = {
         'coalesce': False,
         'max_instances': 3
     }
 
-    scheduler = BlockingScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc)
-    scheduler.add_job(grab,'cron', hour='22', minute='00')
+    scheduler = BlockingScheduler(
+        jobstores=jobstores, 
+        executors=executors, 
+        job_defaults=job_defaults,
+        timezone= timezone('Europe/Moscow'))
+    scheduler.remove_all_jobs()
+    scheduler.add_job(grab,'cron', hour='23', minute='49')
+    print('sheduler started ',datetime.datetime.now())
     scheduler.start()
 

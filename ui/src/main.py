@@ -22,7 +22,10 @@ with st.sidebar:
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
-    if st.button('Save'):
+    if st.button('▶️  Get vacancies'):
+        get_vacs(edited_df)
+
+    if st.button('✅ Save'):
         update_db_df(edited_df)
 
 st.markdown('## Assistant for job search')
