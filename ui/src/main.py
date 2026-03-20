@@ -16,9 +16,6 @@ st.title('Job finder')
 grabber_result_id = st.session_state.get('result_id',None)
 grabber_status = st.session_state.get('get_vacancies_status',None)
 
-st.write(str(grabber_result_id))
-
-st.write(str(grabber_status))
 with st.sidebar:
 
     with st.spinner("Loading..."):
@@ -60,6 +57,8 @@ with st.sidebar:
 
     if st.button('✅ Save'):
         update_db_df(edited_df)
+
+# MAIN WINDOW
 
 st.markdown('## Assistant for job search')
 
