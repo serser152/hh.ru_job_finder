@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+import psycopg2
 import pandas as pd
 import time
 import json
@@ -23,8 +24,21 @@ def update_db_df(edited_df):
     edited_df.to_sql('searches',con,index=False,if_exists='replace')
 
 
-def get_last_df():
+def get_last_data():
+    '''get last data '''
     df2 = pd.read_sql('''select * from hh_ds_last_values''', con=con)
+    return df2
+
+
+def del_last_data():
+    conn = psycopg2.connect(con)
+    cur = conn.cursor()
+    cur.execute('''
+    delete from hh_ds
+     WHERE dt = (( SELECT max(hd.dt) AS max
+           FROM hh_ds hd));''')
+    conn.commit()
+    conn.close()
 
 
 def grab_hh(phone, password, request):

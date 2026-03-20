@@ -16,7 +16,38 @@ st.title('Job finder')
 grabber_result_id = st.session_state.get('result_id',None)
 grabber_status = st.session_state.get('get_vacancies_status',None)
 
-with st.sidebar:
+tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
+
+
+# MAIN WINDOW
+
+
+with tab_data:
+    st.markdown('## Assistant for job search')
+
+    data = get_last_data()
+    data['link'] = data['vac_id'].apply(lambda x: f'https://hh.ru/vacancy/{x}')
+    columns = data.columns
+    view_cols = st.multiselect('Columns', columns)
+    st.dataframe(data[view_cols],
+                 column_config={
+                     "link": st.column_config.LinkColumn(
+                         "link", display_text="🌐"
+                     ),
+                 },
+                 )
+
+    st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
+
+with tab_count_by:
+    data = get_last_data()
+    columns = data.columns
+    agg_col = st.selectbox('Считать сумму по:',columns, index=0)
+    data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
+    data3 = data2.sort_values('vac_id',ascending=False).head(10)
+    st.bar_chart(data2,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
+
+with tab_settings:
 
     with st.spinner("Loading..."):
         df = get_active_searches()
@@ -54,19 +85,14 @@ with st.sidebar:
     # print last update time
     if st.session_state.get('get_vacancies_status'):
         st.write(st.session_state.get('get_vacancies_status'))
-
+    if st.button('🗑️ удалить последнюю закачку вакансий'):
+        del_last_data()
     if st.button('✅ Save'):
         update_db_df(edited_df)
 
-# MAIN WINDOW
-
-st.markdown('## Assistant for job search')
-
-opt = st.selectbox('Select a search',edited_df['request'])
 
 
 
-st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
-
-time.sleep(1)
+time.sleep(2)
 st.rerun()
+
