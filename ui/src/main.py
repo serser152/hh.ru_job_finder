@@ -85,7 +85,7 @@ with tab_settings:
     # print last update time
     if st.session_state.get('get_vacancies_status'):
         st.write(st.session_state.get('get_vacancies_status'))
-    if st.button('🗑️ удалить последнюю закачку вакансий'):
+    if st.button('🗑️ remove last load'):
         del_last_data()
     if st.button('✅ Save'):
         update_db_df(edited_df)

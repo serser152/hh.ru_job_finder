@@ -1,9 +1,9 @@
 # Job assistant
 
 ## Goals
-  - help with market analysis (vacancy count, main companies, job parameters)
-  - help to find and response to vacancies
-
+  - Market analysis (vacancy count, main companies, job parameters)
+  - Find and response to vacancies
+  - 
 
 
 ## Supported sites
@@ -15,19 +15,25 @@
 Service implemented via docker containers. There are following containers:
 - postgresql
 - grafana
-- hh_grubber
-- scheduller
-- gui (interface to work)
-    - redis+rabbitmq+celery
+- hh_grubber (selenium)
+- scheduller (apscheduler)
+- gui (streamlit + celery)
+- redis (for celery)
+- rabbitmq (for celery)
 
 ## Examples
 
 ### UI
-![4](images/example4.png)
-![5](images/example5.png)
-![6](images/example6.png)
-![7](images/example7.png)
 
+#### Settings tab
+![4](images/example4.png)
+#### data tab
+![5](images/example5.png)
+
+table in fullscreen mode
+![6](images/example6.png)
+#### count bar chart 
+![7](images/example7.png)
 
 ### Grafana charts
 
