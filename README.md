@@ -18,8 +18,16 @@ Service implemented via docker containers. There are following containers:
 - hh_grubber
 - scheduller
 - gui (interface to work)
+    - redis+rabbitmq+celery
 
 ## Examples
+
+### UI
+![4](images/example4.png)
+![5](images/example5.png)
+![6](images/example6.png)
+![7](images/example7.png)
+
 
 ### Grafana charts
 
@@ -30,3 +38,5 @@ Service implemented via docker containers. There are following containers:
 
 #### Мониторинг работы загрузки вакансий
 ![3](images/example3.png)
+
+
