@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+# coding: utf-8
+import pandas as pd
+import time
+import json
+from time import sleep
+import datetime
+import requests
+from celery import Celery
+from io import StringIO
+
+con = 'postgresql://postgres:postgres@postgres:5432/public'
+
+app = Celery('tasks', 
+    backend='redis://redis:6379/0',
+    broker='amqp://admin:secure_password@rabbitmq//')
+
+def get_active_searches():
+    df = pd.read_sql('select * from searches',con)
+    return df
+
+def update_db_df(edited_df):
+    edited_df.to_sql('searches',con,index=False,if_exists='replace')
+
+
+def get_last_df():
+    df2 = pd.read_sql('''select * from hh_ds_last_values''', con=con)
+
+
+def grab_hh(phone, password, request):
+
+    con = 'postgresql://postgres:postgres@postgres:5432/public'
+    phone = str(phone)
+    print('first try')
+    print(f''' phone = "{phone}", "{password}", "{request}"''')
+    res = requests.post('http://hh_grabber:8000/find_vacancies',
+                        json={
+                          "phone": phone,
+                          "password": password,
+                          "request": request
+                        })
+
+    print('res=',res)
+    max_try = 5
+
+    while not res.ok:
+        if max_try == 0:
+            raise Exception('API max retries reached')
+        #wait 1 min
+        sleep(60)
+        # request again
+        res = requests.post('http://hh_grabber:8000/find_vacancies', 
+                        json={
+                          "phone": phone,
+
+                            "password": password,
+                          "request": request
+                        })
+        max_try -= 1
+
+    d=res.json()
+    df = pd.DataFrame(json.loads(d))
+    df['dt']=pd.to_datetime(df.dt, unit='ms')
+
+    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
+
+
+    # grab new vac_ids
+    df2 = pd.read_sql('''select vac_id from hh_ds_last_values where vac_id not in (select vac_id from vacancy_descriptions)''', con=con)
+
+    vac_ids = df2.vac_id.to_list()
+
+    res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
+                    json={
+                      "phone": phone,
+
+                        "password": password,
+                      "vacancy_ids": vac_ids
+                    })
+
+    max_try = 5
+    while not res.ok:
+        if max_try == 0:
+            raise Exception('Request vac desriptions: API max retries reached')
+        #wait 1 min
+        sleep(60)
+        # request again
+        res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
+                        json={
+                          "phone": phone,
+
+                            "password": password,
+                          "vacancy_ids": vac_ids
+                        })
+        max_try -= 1
+
+
+    d=res.json()
+    df = pd.DataFrame(json.loads(d))
+
+    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
+
+@app.task(bind=True)
+def grab(self, df):
+    df2=pd.read_json(StringIO(df))
+    print('grab job started')
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        grab_hh(row.phone, row.password, row.request)
+        print(f'grab {row.phone} {row.password} {row.request}')
+        self.update_state(state='PROGRESS', meta={'done': 100.0*i/len(df2)})
+    self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
+
+@app.task(bind=True)
+def grab2(self,df):
+    ### testing
+    df2=pd.read_json(StringIO(df))
+    print(df2)
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    sleep(10)
+    self.update_state(state='PROGRESS', meta={'done': 25})
+    sleep(10)
+    self.update_state(state='PROGRESS', meta={'done': 50})
+    sleep(10)
+    self.update_state(state='PROGRESS', meta={'done': 75})
+    sleep(10)
+    self.update_state(state='PROGRESS', meta={'done': 100})
+    return [{'request': 123}]

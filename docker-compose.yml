@@ -37,7 +37,30 @@ services:
     ports:
       - "5433:5432"
 
+  redis:
+    image: redis:7.4-alpine
+    restart: always
+    #ports:
+    #  - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    image: rabbitmq:management
+    #ports:
+    #  - "5672:5672"
+    #  - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: secure_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_log:/var/log/rabbitmq
+ 
 volumes:
   grafana-data:
   postgres_data:
+  redis_data:
+  rabbitmq_data:
+  rabbitmq_log:
 

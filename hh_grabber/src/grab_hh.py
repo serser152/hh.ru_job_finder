@@ -33,6 +33,7 @@ def find_n_click(txt):
 
 def login(phone='9200123456', password='123456'):
     '''login to hh.ru using phone and password'''
+    print('Login to hh')
 
     global driver
     options = Options()
@@ -78,6 +79,7 @@ def login(phone='9200123456', password='123456'):
 
 
 def send_find_request(txt):
+    print(f'Send find request {txt}')
     res= driver.find_elements(By.TAG_NAME,'input')
     for r in res:
         if r.get_attribute('data-qa') == 'search-input':
@@ -189,6 +191,7 @@ data=[]
 
 def grep_results():
     '''parsing all search results (all pages, all cards)'''
+    print(f'Grep results')
     global data
     driver.switch_to.window(driver.window_handles[0])
 

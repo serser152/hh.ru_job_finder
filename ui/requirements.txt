@@ -3,3 +3,5 @@ pandas
 sqlalchemy
 streamlit
 requests
+celery
+redis
