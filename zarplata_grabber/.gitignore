@@ -1,0 +1,8 @@
+tmp
+*pycache*
+src/test.py
+.env
+
+
+
+

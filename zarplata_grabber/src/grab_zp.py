@@ -32,8 +32,8 @@ def find_n_click(txt):
             break
 
 def login(phone='9200123456', password='123456'):
-    '''login to hh.ru using phone and password'''
-    print('Login to hh')
+    '''login to zarplata.ru using phone and password'''
+    print('Login to zarplata.ru')
 
     global driver
     options = Options()
@@ -46,13 +46,13 @@ def login(phone='9200123456', password='123456'):
     #driver = selenium.webdriver.Chrome(options=options)
     driver = selenium.webdriver.Firefox(options=options)
 
-    driver.get('https://nn.hh.ru')
+    driver.get('https://nn.zarplata.ru')
 
     #accept cookie and accept NN
     find_n_click('Понятно')
-    find_n_click('Да, верно')
+    #find_n_click('Да, верно')
 
-    driver.get('https://nn.hh.ru/account/login?role=applicant&backurl=%2F&hhtmFrom=main')
+    driver.get('https://nn.zarplata.ru/account/login?role=applicant&backurl=%2F&hhtmFrom=main')
     sleep(2)
 
     # enter via password
@@ -164,7 +164,7 @@ def parse_page(n=1, skip_click=False):
 def get_description(vac_id):
     '''parse vacancy details description page'''
 
-    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    driver.get(f'https://zarplata.ru/vacancy/{vac_id}')
     sleep(1)
     d = {
         'vac_id': vac_id,
@@ -217,7 +217,7 @@ def click_by_id(vac_id):
     click to respond on a vacancy.
     vid - vacancy id
     '''
-    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    driver.get(f'https://zarplata.ru/vacancy/{vac_id}')
     sleep(1)
 
     r = find_by_qa2('vacancy-response-link-top')
@@ -255,7 +255,7 @@ def process_results(data, req='ds'):
 
     df2=df.apply(parse_tags,axis=1)
     df2.drop(columns=['tags'], inplace=True)
-    df2['site']='hh.ru'
+    df2['site']='zarplata.ru'
     return df2
 
 
@@ -287,7 +287,7 @@ def get_descriptions(phone, password, vacancy_ids):
     try:
         login(phone, password)
         res = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
-        res['site']='hh.ru'
+        res['site']='zarplata.ru'
         driver.quit()
     except Exception as e:
         print(e)
@@ -304,5 +304,4 @@ def accept_vacancy(phone, password, vacancy_ids):
     except Exception as e:
         print(e)
     driver.quit()
-
 
