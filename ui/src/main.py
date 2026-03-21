@@ -37,7 +37,6 @@ with tab_data:
                  },
                  )
 
-    st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
 
 with tab_count_by:
     data = get_last_data()
@@ -86,13 +85,14 @@ with tab_settings:
     if st.session_state.get('get_vacancies_status'):
         st.write(st.session_state.get('get_vacancies_status'))
     if st.button('🗑️ remove last load'):
-        del_last_data()
+        with st.spinner('deleting in progress'):
+            del_last_data()
     if st.button('✅ Save'):
-        update_db_df(edited_df)
+        with st.spinner('Saving'):
+            update_db_df(edited_df)
 
+    st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
 
-
-
-time.sleep(2)
+time.sleep(10)
 st.rerun()
 

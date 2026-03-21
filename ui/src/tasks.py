@@ -191,10 +191,14 @@ def grab_zp(phone, password, request):
 
 @app.task(bind=True)
 def grab(self, df):
+    '''grab vacancies using sources from dataframe df'''
     df2=pd.read_json(StringIO(df))
     print('grab job started')
     self.update_state(state='PROGRESS', meta={'done': 0})
     for i,row in df2.iterrows():
+        # check if enabled
+        if not row.enabled:
+            continue
         if row.site == 'hh.ru':
             print('grab hh', row.request)
             grab_hh(row.phone, row.password, row.request)
@@ -203,7 +207,8 @@ def grab(self, df):
             grab_zp(row.phone, row.password, row.request)
 
         self.update_state(state='PROGRESS', meta={'done': 100.0*i/len(df2)})
-    self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
+    return 'DONE'
+    #self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
 
 @app.task(bind=True)
 def grab2(self,df):
