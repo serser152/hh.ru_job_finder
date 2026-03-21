@@ -40,6 +40,64 @@ def del_last_data():
     conn.commit()
     conn.close()
 
+def init_db():
+    conn = psycopg2.connect(con)
+    cur = conn.cursor()
+    cur.execute('''
+
+drop table if exists hh.ds;
+
+CREATE TABLE public.hh_ds (
+    title text NULL,
+    company text NULL,
+    status text NULL,
+    dt timestamp NULL,
+    expirience text NULL,
+    "money" text NULL,
+    remote text NULL,
+    vac_title text NULL,
+    vac_salary text NULL,
+    vac_exp text NULL,
+    vac_emp text NULL,
+    vac_hiring_format text NULL,
+    vac_working_hours text NULL,
+    vac_work_format text NULL,
+    vac_descr text NULL,
+    vac_id varchar NULL,
+    site varchar(100) NULL DEFAULT 'hh.ru'::character varying
+);
+
+
+
+drop table if exists searches;
+
+CREATE TABLE public.searches (
+    request text NULL,
+    phone text NULL,
+    "password" text NULL,
+    site text NULL,
+    enabled bool NULL
+);
+
+
+drop table if exists vacancy_descriptions;
+
+CREATE TABLE public.vacancy_descriptions (
+    vac_id varchar NULL,
+    vac_title text NULL,
+    vac_salary text NULL,
+    vac_exp text NULL,
+    vac_emp text NULL,
+    vac_hiring_format text NULL,
+    vac_working_hours text NULL,
+    vac_work_format text NULL,
+    vac_descr text NULL,
+    site varchar(100) NULL DEFAULT 'hh.ru'::character varying
+);
+''')
+    conn.commit()
+    conn.close()
+
 
 def grab_hh(phone, password, request):
 

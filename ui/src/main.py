@@ -90,6 +90,9 @@ with tab_settings:
     if st.button('✅ Save'):
         with st.spinner('Saving'):
             update_db_df(edited_df)
+    if st.button(' Initialize DB'):
+        with st.spinner('🧨 Initializing DB'):
+            init_db()
 
     st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
 
