@@ -7,9 +7,9 @@ services:
     #ports:
     #  - "8000:8000"
 
-#  zarplata_grabber:
-#    image: zarplata_grabber:0.1
-#    build: zarplata_grabber
+  zarplata_grabber:
+    image: zarplata_grabber:0.1
+    build: zarplata_grabber
     #ports:
     #  - "8000:8000"
 
