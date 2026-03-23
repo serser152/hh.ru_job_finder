@@ -8,6 +8,7 @@
 
 ## Supported sites
   - hh.ru
+  - zarplata.ru
 
 
 ## Architecture
