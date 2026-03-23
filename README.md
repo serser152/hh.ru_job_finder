@@ -2,7 +2,7 @@
 
 ## Goals
   - Market analysis (vacancy count, main companies, job parameters)
-  - Find and response to vacancies
+  - Find and respond to vacancies
   - 
 
 
