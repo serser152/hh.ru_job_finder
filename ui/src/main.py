@@ -37,17 +37,17 @@ def display_settings_tab(grabber_result_id, grabber_status):
     with st.spinner("Loading..."):
         df = get_active_searches()
     i = app.control.inspect()
-    scheduled = [k for k in i.scheduled().values()][0]
-    active = [k for k in i.active().values()][0]
-    reserved = [k for k in i.reserved().values()][0]
+    try:
+        active = [k for k in i.active().values()][0]
+    except:
+        active=[]
 
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
     if len(active)>0:
         grabber_result_id = active[0]
-    elif len(scheduled)>0:
-        grabber_result_id = scheduled[0]
+
     if grabber_result_id:
         res = app.AsyncResult(grabber_result_id)
 
@@ -120,6 +120,6 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id, grabber_status)
 
-time.sleep(60)
+time.sleep(600)
 st.rerun()
 
