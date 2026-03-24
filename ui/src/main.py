@@ -46,8 +46,7 @@ def display_settings_tab(grabber_result_id, grabber_status):
 
     if len(active)>0:
         grabber_result_id = active[0]
-    elif len(scheduled)>0:
-        grabber_result_id = scheduled[0]
+
     if grabber_result_id:
         res = app.AsyncResult(grabber_result_id)
 
@@ -120,6 +119,6 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id, grabber_status)
 
-time.sleep(60)
+time.sleep(600)
 st.rerun()
 
