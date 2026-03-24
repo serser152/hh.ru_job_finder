@@ -121,6 +121,7 @@ def parse_card(r):
         'tags': tags,
         'company': company,
         'status': status,
+        'link': f'https://hh.ru/vacancy/{vac_id}'
     }
     sleep(1)
     return d

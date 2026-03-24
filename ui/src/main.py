@@ -11,22 +11,14 @@ import requests
 from tasks import *
 
 
-st.title('Job finder')
-
-grabber_result_id = st.session_state.get('result_id',None)
-grabber_status = st.session_state.get('get_vacancies_status',None)
-
-tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
-
-
-# MAIN WINDOW
-
-
-with tab_data:
+def display_data_tab():
+    '''
+        Display data tab
+    '''
     st.markdown('## Assistant for job search')
 
     data = get_last_data()
-    data['link'] = data['vac_id'].apply(lambda x: f'https://hh.ru/vacancy/{x}')
+    #data['link'] = data['vac_id'].apply(lambda x: f'https://hh.ru/vacancy/{x}')
     columns = data.columns
     view_cols = st.multiselect('Columns', columns)
     st.dataframe(data[view_cols],
@@ -38,24 +30,27 @@ with tab_data:
                  )
 
 
-with tab_count_by:
-    data = get_last_data()
-    columns = data.columns
-    agg_col = st.selectbox('Считать сумму по:',columns, index=0)
-    data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
-    data3 = data2.sort_values('vac_id',ascending=False).head(10)
-    st.bar_chart(data2,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
-
-with tab_settings:
-
+def display_settings_tab(grabber_result_id, grabber_status):
+    '''
+        Display settings tab
+    '''
     with st.spinner("Loading..."):
         df = get_active_searches()
+    i = app.control.inspect()
+    scheduled = [k for k in i.scheduled().values()][0]
+    active = [k for k in i.active().values()][0]
+    reserved = [k for k in i.reserved().values()][0]
+
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
-
+    if len(active)>0:
+        grabber_result_id = active[0]
+    elif len(scheduled)>0:
+        grabber_result_id = scheduled[0]
     if grabber_result_id:
         res = app.AsyncResult(grabber_result_id)
+
         st.write(res.state)
         # if done
         if res.state=='SUCCESS':
@@ -96,6 +91,35 @@ with tab_settings:
 
     st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
 
-time.sleep(10)
+
+def display_count_by_tab():
+    '''
+        Display count by tab
+    '''
+    data = get_last_data()
+    columns = data.columns
+    agg_col = st.selectbox('Считать сумму по:',columns, index=0)
+    data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
+    data3 = data2.sort_values('vac_id',ascending=False).head(10)
+    st.bar_chart(data2,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
+
+st.title('Job finder')
+
+grabber_result_id = st.session_state.get('result_id',None)
+grabber_status = st.session_state.get('get_vacancies_status',None)
+
+tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
+
+# MAIN WINDOW
+with tab_data:
+    display_data_tab()
+
+with tab_count_by:
+    display_count_by_tab()
+
+with tab_settings:
+    display_settings_tab(grabber_result_id, grabber_status)
+
+time.sleep(60)
 st.rerun()
 
