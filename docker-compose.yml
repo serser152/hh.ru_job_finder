@@ -4,14 +4,14 @@ services:
   hh_grabber:
     image: hh_grabber:0.3
     build: hh_grabber
-    #ports:
-    #  - "8000:8000"
+    ports:
+      - "8001:8000"
 
   zarplata_grabber:
     image: zarplata_grabber:0.1
     build: zarplata_grabber
-    #ports:
-    #  - "8000:8000"
+    ports:
+      - "8002:8000"
 
 #  scheduler:
 #    image: scheduler:0.1
