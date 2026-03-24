@@ -2,13 +2,29 @@
 
 ## Goals
   - Market analysis (vacancy count, main companies, job parameters)
-  - Find and response to vacancies
-  - 
-
+  - Find and respond to vacancies
+  - Automatic vacancies matching, skills analysis (TBD)
 
 ## Supported sites
   - hh.ru
+  - zarplata.ru
 
+## System requirements
+
+OS Linux with docker-compose and git installed.
+
+## Installation
+
+```
+git clone https://github.com/serser152/hh.ru_job_finder
+cd hh.ru_job_finder
+docker-compose build
+docker-compose up -d
+```
+
+UI - [http://localhost:8501](http://localhost:8501)
+
+grafana interface - [http://localhost:3000](http://localhost:3000)
 
 ## Install
 
