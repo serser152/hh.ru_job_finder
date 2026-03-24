@@ -8,12 +8,15 @@
 ## Supported sites
   - hh.ru
   - zarplata.ru
+  - superjob.ru (TBD)
 
 ## System requirements
 
 OS Linux with docker-compose and git installed.
 
 ## Installation
+
+1) clone repo
 
 ```
 git clone https://github.com/serser152/hh.ru_job_finder
@@ -23,10 +26,13 @@ docker-compose up -d
 ```
 
 UI - [http://localhost:8501](http://localhost:8501)
-
 grafana interface - [http://localhost:3000](http://localhost:3000)
 
-## Install
+2) Configure password access on sites
+3) Enter the UI settings tab and add grab request.
+
+
+
 
 ## Architecture
 
