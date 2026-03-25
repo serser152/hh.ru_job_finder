@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
+'''
+Grab hh.ru data modules
 
-import selenium.webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
-from tqdm import tqdm
+def get_vacancies(phone, password, request)
+def get_descriptions(phone, password, vacancy_ids)
+def accept_vacancy(phone, password, vacancy_ids)
+'''
+
 from time import sleep
 import datetime
 import pandas as pd
+from tqdm import tqdm
+import selenium.webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
 
 #######################################
 #           Login utils               #
@@ -72,7 +79,7 @@ def login(phone='9200123456', password='123456'):
 
 
 def send_find_request(txt):
-    print(f'Send find request {txt}')
+    '''Send find request'''
     res = driver.find_elements(By.TAG_NAME, 'input')
     for r in res:
         if r.get_attribute('data-qa') == 'search-input':
@@ -86,10 +93,12 @@ def send_find_request(txt):
 
 
 def find_by_qa(qa_txt):
+    '''find element by qa attribute'''
     return driver.find_elements(By.CSS_SELECTOR, f'[data-qa="{qa_txt}"]')
 
 
 def find_by_qa2(txt):
+    '''find element by qa attribute'''
     try:
         return find_by_qa(txt)[0].text
     except Exception:
@@ -100,6 +109,11 @@ def parse_card(r):
     ''' parse job card. Click and parse details'''
     title = r.find_element(By.TAG_NAME, 'h2').text
     res = r.find_elements(By.TAG_NAME, 'div')
+    vac_id = None
+    tags = None
+    company = None
+    status = None
+
     for t in res:
         if t.get_attribute('class').startswith('vacancy-card--'):
             vac_id = t.get_property('id')
@@ -144,7 +158,8 @@ def parse_page(n=1, skip_click=False):
     '''Parsing page of search results'''
     if not skip_click:
         ii = driver.find_element(By.TAG_NAME, 'nav').find_elements(By.TAG_NAME, 'li')
-        pages = [iii for iii in ii]
+        pages = ii
+        p = None
         for p in pages:
             if p.text == str(n):
                 break
@@ -217,8 +232,9 @@ def click_by_id(vac_id):
 # process parsed data     #
 ############################
 
-def process_results(data, req='ds'):
-    df = pd.DataFrame(data)
+def process_results(data_res):
+    '''process parsed data'''
+    df = pd.DataFrame(data_res)
     df['dt'] = datetime.datetime.now()
 
     df.loc[df['status'].str.startswith('Откликнуться'), 'status'] = 'Откликнуться'
@@ -228,7 +244,6 @@ def process_results(data, req='ds'):
 
     def parse_tags(x):
         l = x['tags'].split('\n')
-
         x['expirience'] = None
         x['money'] = None
         x['remote'] = None
@@ -257,8 +272,8 @@ def get_vacancies(phone, password, request):
     try:
         login(phone, password)
         send_find_request(request)
-        data = grep_results()
-        df = process_results(data, 'ds')
+        data_res = grep_results()
+        df = process_results(data_res)
         driver.quit()
     except Exception as e:
         print(e)
