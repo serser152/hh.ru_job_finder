@@ -1,37 +1,39 @@
 #!/usr/bin/env python
 # coding: utf-8
-import psycopg2
-import pandas as pd
-import time
+"""Шаблон для задач celery"""
 import json
 from time import sleep
-import datetime
+from io import StringIO
+import psycopg2
+import pandas as pd
 import requests
 from celery import Celery
-from io import StringIO
 
-con = 'postgresql://postgres:postgres@postgres:5432/public'
+CON = 'postgresql://postgres:postgres@postgres:5432/public'
 
-app = Celery('tasks', 
+app = Celery('tasks',
     backend='redis://redis:6379/0',
     broker='amqp://admin:secure_password@rabbitmq//')
 
 def get_active_searches():
-    df = pd.read_sql('select * from searches',con)
+    """get active searches"""
+    df = pd.read_sql('select * from searches',CON)
     return df
 
 def update_db_df(edited_df):
-    edited_df.to_sql('searches',con,index=False,if_exists='replace')
+    """update db"""
+    edited_df.to_sql('searches', con=CON, index=False, if_exists='replace')
 
 
 def get_last_data():
-    '''get last data '''
-    df2 = pd.read_sql('''select * from hh_ds_last_values''', con=con)
+    """get last data """
+    df2 = pd.read_sql('''select * from hh_ds_last_values''', con=CON)
     return df2
 
 
 def del_last_data():
-    conn = psycopg2.connect(con)
+    """del last data grabbed"""
+    conn = psycopg2.connect(CON)
     cur = conn.cursor()
     cur.execute('''
     delete from hh_ds
@@ -41,7 +43,8 @@ def del_last_data():
     conn.close()
 
 def init_db():
-    conn = psycopg2.connect(con)
+    """init db"""
+    conn = psycopg2.connect(CON)
     cur = conn.cursor()
     cur.execute('''
 
@@ -67,8 +70,6 @@ CREATE TABLE public.hh_ds (
     site varchar(100) NULL DEFAULT 'hh.ru'::character varying
 );
 
-
-
 drop table if exists searches;
 
 CREATE TABLE public.searches (
@@ -78,7 +79,6 @@ CREATE TABLE public.searches (
     site text NULL,
     enabled bool NULL
 );
-
 
 drop table if exists vacancy_descriptions;
 
@@ -100,8 +100,7 @@ CREATE TABLE public.vacancy_descriptions (
 
 
 def grab_hh(phone, password, request):
-
-    con = 'postgresql://postgres:postgres@postgres:5432/public'
+    """grab hh"""
     phone = str(phone)
     print('first try')
     print(f''' phone = "{phone}", "{password}", "{request}"''')
@@ -112,7 +111,7 @@ def grab_hh(phone, password, request):
                           "request": request
                         })
 
-    print('res=',res)
+    print('res=', res)
     max_try = 5
 
     while not res.ok:
@@ -121,32 +120,31 @@ def grab_hh(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://hh_grabber:8000/find_vacancies', 
+        res = requests.post('http://hh_grabber:8000/find_vacancies',
                         json={
-                          "phone": phone,
-
-                            "password": password,
-                          "request": request
+                        "phone": phone,
+                        "password": password,
+                        "request": request
                         })
         max_try -= 1
 
-    d=res.json()
+    d = res.json()
     df = pd.DataFrame(json.loads(d))
-    df['dt']=pd.to_datetime(df.dt, unit='ms')
+    df['dt'] = pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
-
+    df.to_sql('hh_ds', con=CON, if_exists='append', index=False)
 
     # grab new vac_ids
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values where vac_id not in (select vac_id from vacancy_descriptions)''', con=con)
+    df2 = pd.read_sql('''select vac_id from hh_ds_last_values
+                         where vac_id not in (select vac_id from vacancy_descriptions)''',
+                      con=CON)
 
     vac_ids = df2.vac_id.to_list()
 
     res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
                     json={
                       "phone": phone,
-
-                        "password": password,
+                      "password": password,
                       "vacancy_ids": vac_ids
                     })
 
@@ -160,8 +158,7 @@ def grab_hh(phone, password, request):
         res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
                         json={
                           "phone": phone,
-
-                            "password": password,
+                          "password": password,
                           "vacancy_ids": vac_ids
                         })
         max_try -= 1
@@ -170,16 +167,15 @@ def grab_hh(phone, password, request):
     d=res.json()
     df = pd.DataFrame(json.loads(d))
 
-    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
+    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 def grab_zp(phone, password, request):
     phone=str(phone)
     con = 'postgresql://postgres:postgres@postgres:5432/public'
-    res = requests.post('http://zarplata_grabber:8000/find_vacancies', 
+    res = requests.post('http://zarplata_grabber:8000/find_vacancies',
                         json={
                           "phone": phone,
-
-                            "password": password,
+                          "password": password,
                           "request": request
                         })
 
@@ -191,11 +187,10 @@ def grab_zp(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://zarplata_grabber:8000/find_vacancies', 
+        res = requests.post('http://zarplata_grabber:8000/find_vacancies',
                         json={
                           "phone": phone,
-
-                            "password": password,
+                          "password": password,
                           "request": request
                         })
         max_try -= 1
@@ -215,11 +210,10 @@ def grab_zp(phone, password, request):
 
     vac_ids = df2.vac_id.to_list()
 
-    res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions', 
+    res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
                     json={
                       "phone": phone,
-
-                        "password": password,
+                      "password": password,
                       "vacancy_ids": vac_ids
                     })
 
@@ -230,11 +224,10 @@ def grab_zp(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions', 
+        res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
                         json={
                           "phone": phone,
-
-                            "password": password,
+                          "password": password,
                           "vacancy_ids": vac_ids
                         })
         max_try -= 1
@@ -242,9 +235,7 @@ def grab_zp(phone, password, request):
 
     d=res.json()
     df = pd.DataFrame(json.loads(d))
-
     df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
-
 
 
 @app.task(bind=True)
@@ -268,9 +259,10 @@ def grab(self, df):
     return 'DONE'
     #self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
 
+
 @app.task(bind=True)
 def grab2(self,df):
-    ### testing
+    """grab vacancies test task"""
     df2=pd.read_json(StringIO(df))
     print(df2)
     self.update_state(state='PROGRESS', meta={'done': 0})

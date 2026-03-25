@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
-import pandas as pd
-import streamlit as st
 import time
-import pandas as pd
 import json
 from time import sleep
 import datetime
 import requests
+import pandas as pd
+import streamlit as st
 from tasks import *
 
 
@@ -39,7 +38,7 @@ def display_settings_tab(grabber_result_id, grabber_status):
     i = app.control.inspect()
     try:
         active = [k for k in i.active().values()][0]
-    except:
+    except Exception:
         active=[]
 
     st.markdown('### Active searches')
@@ -54,11 +53,12 @@ def display_settings_tab(grabber_result_id, grabber_status):
         st.write(res.state)
         # if done
         if res.state=='SUCCESS':
-            st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '+str(datetime.datetime.now())
+            st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '\
+                                                       + str(datetime.datetime.now())
             st.session_state['result_id'] = None
             res.get()
         # if task in progress or waiting
-        elif res.state in ('PROGRESS','PENDING', 'STARTED', 'RETRY'):
+        elif res.state in ('PROGRESS', 'PENDING', 'STARTED', 'RETRY'):
             if res.state in ('PROGRESS',):
                 st.progress(res.info.get('done', 0))
 
@@ -89,13 +89,13 @@ def display_settings_tab(grabber_result_id, grabber_status):
         with st.spinner('🧨 Initializing DB'):
             init_db()
 
-    st.link_button('Grafana Monitor&Analysis',f'http://localhost:3000')
+    st.link_button('Grafana Monitor&Analysis', 'http://localhost:3000')
 
 
 def display_count_by_tab():
-    '''
+    """
         Display count by tab
-    '''
+    """
     data = get_last_data()
     columns = data.columns
     agg_col = st.selectbox('Считать сумму по:',columns, index=0)
@@ -122,4 +122,3 @@ with tab_settings:
 
 time.sleep(600)
 st.rerun()
-
