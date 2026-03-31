@@ -183,7 +183,7 @@ CREATE TABLE public.searches (
 ALTER TABLE public.searches OWNER TO postgres;
 
 
-insert into public.searches (request, phone, password, site, enabled) 
+insert into public.searches (request, phone, password, site) 
 values ('data science','9061234567','pass123','zarplata.ru'), ('data science','9061234567','pass123','hh.ru');
 
 
