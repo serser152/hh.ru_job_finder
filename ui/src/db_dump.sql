@@ -138,7 +138,8 @@ CREATE VIEW public.hh_ds_last_values AS
     money,
     remote,
     vac_id,
-    site
+    site,
+    link
    FROM public.hh_ds hd2
   WHERE ((dt)::date = ( SELECT max((hd.dt)::date) AS max
            FROM public.hh_ds hd));
