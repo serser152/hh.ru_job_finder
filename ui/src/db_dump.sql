@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict SA6lNcGNHRvuNEc9ZPjKgSis5nCicBJw5GKbVfUikfLCuDjmwMHVoZec88Z4Z23
-
 -- Dumped from database version 17.9 (Debian 17.9-1.pgdg13+1)
 -- Dumped by pg_dump version 17.6 (Debian 17.6-0+deb13u1)
 
@@ -192,6 +190,4 @@ data science	9061234567	pass123	hh.ru	t
 
 
 
-
-\unrestrict SA6lNcGNHRvuNEc9ZPjKgSis5nCicBJw5GKbVfUikfLCuDjmwMHVoZec88Z4Z23
 

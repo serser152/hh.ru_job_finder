@@ -14,6 +14,7 @@ from tasks import (
     update_db_df,
     get_active_searches,
     init_db,
+    check_db,
     app)
 
 
@@ -134,7 +135,7 @@ print('Found resultid = ', grabber_result_id)
 grabber_status = st.session_state.get('get_vacancies_status',None)
 
 tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
-
+check_db()
 # MAIN WINDOW
 with tab_data:
     display_data_tab()
