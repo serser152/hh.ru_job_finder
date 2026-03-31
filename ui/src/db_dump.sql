@@ -183,10 +183,9 @@ CREATE TABLE public.searches (
 ALTER TABLE public.searches OWNER TO postgres;
 
 
-COPY public.searches (request, phone, password, site, enabled) FROM stdin;
-data science	9061234567	pass123	zarplata.ru	t
-data science	9061234567	pass123	hh.ru	t
-\.
+insert into public.searches (request, phone, password, site, enabled) 
+values ('data science','9061234567','pass123','zarplata.ru'), ('data science','9061234567','pass123','hh.ru');
+
 
 
 
