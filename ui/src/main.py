@@ -47,53 +47,42 @@ def display_settings_tab(result_id):
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
-    i = app.control.inspect()
-    print('Active:', i.active())
-    if i.active():
-        active_lst = list(i.active().values())
-    else:
-        active_lst = []
+    try:
+        if result_id:
+            res = app.AsyncResult(result_id)
 
-    print('Active tasks list:', active_lst)
-    if len(active_lst) == 0:
-        active = []
-    else:
-        active = active_lst[0]
+            print('res=', str(res))
+            print('res.type=', type(res))
 
-    print(active)
-
-    if len(active)>0:
-        result_id = active[0]
-    print('result_id=', result_id)
-
-
-    if result_id:
-        res = app.AsyncResult(result_id)
-
-        print('res=', str(res))
-        print('res.type=', type(res))
-
-        # if done
-        if res.state=='SUCCESS':
-            st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '\
-                                                       + str(datetime.datetime.now())
-            st.session_state['result_id'] = None
-            res.get()
-        # if task in progress or waiting
-        elif res.state in ('PROGRESS', 'PENDING', 'STARTED', 'RETRY'):
-            if res.state in ('PROGRESS',):
-                st.progress(res.info.get('done', 0))
-
-            if st.button('⏹️  stop grabber'):
-                res = app.AsyncResult(grabber_result_id)
-                res.revoke(terminate=True)
-                res.forget()
+            # if done
+            if res.state=='SUCCESS':
+                st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '\
+                                                           + str(datetime.datetime.now())
                 st.session_state['result_id'] = None
-        #some error
+                res.get()
+            # if task in progress or waiting
+            elif res.state in ('PROGRESS', 'PENDING', 'STARTED', 'RETRY'):
+                if res.state in ('PROGRESS',):
+                    st.progress(res.info.get('done', 0))
+
+                if st.button('⏹️  stop grabber'):
+                    res = app.AsyncResult(grabber_result_id)
+                    res.revoke(terminate=True)
+                    res.forget()
+                    st.session_state['result_id'] = None
+            #some error
+            else:
+                st.session_state['result_id'] = None
+                st.markdown('# **Error grabbing vacancies**')
         else:
-            st.session_state['result_id'] = None
-            st.markdown('# **Error grabbing vacancies**')
-    else:
+            if st.button('▶️  Get vacancies'):
+                result = grab.delay(edited_df.to_json(orient='records'))
+                print('Created task:', result.id)
+                st.session_state.result_id = result.id
+                st.rerun()
+
+    except Exception as e:
+        print(e)
         if st.button('▶️  Get vacancies'):
             result = grab.delay(edited_df.to_json(orient='records'))
             print('Created task:', result.id)
@@ -123,7 +112,7 @@ def display_count_by_tab():
     with st.spinner("Loading last data..."):
         data = get_last_data()
     columns = data.columns
-    agg_col = st.selectbox('Считать сумму по:',columns, index=0)
+    agg_col = st.selectbox('Count vacancies by:',columns, index=0)
     data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
     data3 = data2.sort_values('vac_id',ascending=False).head(10)
     st.bar_chart(data3,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
@@ -147,5 +136,5 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id)
 
-#time.sleep(60)
-#st.rerun()
+time.sleep(600)
+st.rerun()

@@ -224,7 +224,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT start_dt, COUNT(vac_id) \"Создано вакансий\" \nFROM vacancies_start_end_date \nGROUP BY start_dt \nLIMIT 50\n",
+          "rawSql": "SELECT start_dt::date, COUNT(vac_id) \"Создано вакансий\" \nFROM vacancies_start_end_date \nGROUP BY start_dt \nLIMIT 50\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -270,7 +270,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  end_dt,\n  COUNT(vac_id) \"Закрыто вакансий\"\nFROM\n  vacancies_start_end_date\nGROUP BY\n  1\nLIMIT\n  50",
+          "rawSql": "SELECT\n  end_dt::date,\n  COUNT(vac_id) \"Закрыто вакансий\"\nFROM\n  vacancies_start_end_date\nGROUP BY\n  1\nLIMIT\n  50",
           "refId": "B",
           "sql": {
             "columns": [
@@ -451,13 +451,13 @@
     "list": []
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "hh.ru monitor",
   "uid": "advvv9z",
-  "version": 9,
+  "version": 10,
   "weekStart": ""
 }
