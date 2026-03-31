@@ -1,3 +1,5 @@
+[Русская версия](README.ru.md)
+
 # Job assistant
 
 ## Goals
@@ -27,9 +29,11 @@ docker-compose up -d
 
 UI - [http://localhost:8501](http://localhost:8501)
 grafana interface - [http://localhost:3000](http://localhost:3000)
+Import grafana dashboards from "grafana_dashboards" folder.
 
 2) Configure password access on sites
 3) Enter the UI settings tab and add grab request.
+4)
 
 
 
@@ -61,12 +65,12 @@ table in fullscreen mode
 
 ### Grafana charts
 
-#### Обзор рынка
+#### Markert overview
 
 ![1](images/example1.png)
 ![2](images/example2.png)
 
-#### Мониторинг работы загрузки вакансий
+#### System monitoring
 ![3](images/example3.png)
 
 
