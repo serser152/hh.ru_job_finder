@@ -17,14 +17,14 @@ class ScrapingException(Exception):
         super().__init__(self.msg)
 
 
-#CON = 'postgresql://postgres:postgres@postgres:5432/public'
-#app = Celery('tasks',
-#    backend='redis://redis:6379/0',
-#    broker='amqp://admin:secure_password@rabbitmq//')
+CON = 'postgresql://postgres:postgres@postgres:5432/public'
 app = Celery('tasks',
-    backend='redis://localhost:6380/0',
-    broker='amqp://admin:secure_password@localhost:5673//')
-CON = 'postgresql://postgres:postgres@localhost:5433/public'
+    backend='redis://redis:6379/0',
+    broker='amqp://admin:secure_password@rabbitmq//')
+#app = Celery('tasks',
+#    backend='redis://localhost:6380/0',
+#    broker='amqp://admin:secure_password@localhost:5673//')
+#CON = 'postgresql://postgres:postgres@localhost:5433/public'
 
 
 def get_active_searches():
