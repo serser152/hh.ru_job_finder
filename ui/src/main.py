@@ -23,11 +23,11 @@ def display_data_tab():
     '''
     st.markdown('## Assistant for job search')
 
-    data = get_last_data()
-    #data['link'] = data['vac_id'].apply(lambda x: f'https://hh.ru/vacancy/{x}')
-    columns = data.columns
-    view_cols = st.multiselect('Columns', columns)
-    st.dataframe(data[view_cols],
+    with st.spinner("Loading last data..."):
+        data = get_last_data()
+        columns = data.columns
+        view_cols = st.multiselect('Columns', columns)
+        st.dataframe(data[view_cols],
                  column_config={
                      "link": st.column_config.LinkColumn(
                          "link", display_text="🌐"
@@ -40,26 +40,38 @@ def display_settings_tab(result_id):
     """
         Display settings tab
     """
-    with st.spinner("Loading..."):
+    with st.spinner("Loading active searches..."):
         df = get_active_searches()
+
+    st.markdown('### Active searches')
+    edited_df = st.data_editor(df, num_rows="dynamic")
+
     i = app.control.inspect()
-    active_lst = list(i.active().values())
+    print('Active:', i.active())
+    if i.active():
+        active_lst = list(i.active().values())
+    else:
+        active_lst = []
+
+    print('Active tasks list:', active_lst)
     if len(active_lst) == 0:
         active = []
     else:
         active = active_lst[0]
 
     print(active)
-    st.markdown('### Active searches')
-    edited_df = st.data_editor(df, num_rows="dynamic")
 
     if len(active)>0:
         result_id = active[0]
+    print('result_id=', result_id)
+
 
     if result_id:
         res = app.AsyncResult(result_id)
 
-        print(res)
+        print('res=', str(res))
+        print('res.type=', type(res))
+
         # if done
         if res.state=='SUCCESS':
             st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '\
@@ -83,7 +95,9 @@ def display_settings_tab(result_id):
     else:
         if st.button('▶️  Get vacancies'):
             result = grab.delay(edited_df.to_json(orient='records'))
+            print('Created task:', result.id)
             st.session_state.result_id = result.id
+            st.rerun()
 
     # print last update time
     if st.session_state.get('get_vacancies_status'):
@@ -105,7 +119,8 @@ def display_count_by_tab():
     """
         Display count by tab
     """
-    data = get_last_data()
+    with st.spinner("Loading last data..."):
+        data = get_last_data()
     columns = data.columns
     agg_col = st.selectbox('Считать сумму по:',columns, index=0)
     data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
@@ -115,6 +130,7 @@ def display_count_by_tab():
 st.title('Job finder')
 
 grabber_result_id = st.session_state.get('result_id',None)
+print('Found resultid = ', grabber_result_id)
 grabber_status = st.session_state.get('get_vacancies_status',None)
 
 tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
@@ -129,5 +145,5 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id)
 
-time.sleep(600)
-st.rerun()
+#time.sleep(60)
+#st.rerun()
