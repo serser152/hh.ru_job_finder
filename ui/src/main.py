@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
+"""
+User interface module
+"""
+
 import time
-import json
-from time import sleep
 import datetime
-import requests
-import pandas as pd
 import streamlit as st
-from tasks import *
+from tasks import (
+    grab,
+    get_last_data,
+    del_last_data,
+    update_db_df,
+    get_active_searches,
+    init_db,
+    app)
 
 
 def display_data_tab():
@@ -29,28 +36,30 @@ def display_data_tab():
                  )
 
 
-def display_settings_tab(grabber_result_id, grabber_status):
-    '''
+def display_settings_tab(result_id):
+    """
         Display settings tab
-    '''
+    """
     with st.spinner("Loading..."):
         df = get_active_searches()
     i = app.control.inspect()
-    try:
-        active = [k for k in i.active().values()][0]
-    except Exception:
-        active=[]
+    active_lst = list(i.active().values())
+    if len(active_lst) == 0:
+        active = []
+    else:
+        active = active_lst[0]
 
+    print(active)
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
     if len(active)>0:
-        grabber_result_id = active[0]
+        result_id = active[0]
 
-    if grabber_result_id:
-        res = app.AsyncResult(grabber_result_id)
+    if result_id:
+        res = app.AsyncResult(result_id)
 
-        st.write(res.state)
+        print(res)
         # if done
         if res.state=='SUCCESS':
             st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '\
@@ -101,7 +110,7 @@ def display_count_by_tab():
     agg_col = st.selectbox('Считать сумму по:',columns, index=0)
     data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
     data3 = data2.sort_values('vac_id',ascending=False).head(10)
-    st.bar_chart(data2,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
+    st.bar_chart(data3,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
 
 st.title('Job finder')
 
@@ -118,7 +127,7 @@ with tab_count_by:
     display_count_by_tab()
 
 with tab_settings:
-    display_settings_tab(grabber_result_id, grabber_status)
+    display_settings_tab(grabber_result_id)
 
 time.sleep(600)
 st.rerun()

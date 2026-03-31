@@ -9,6 +9,14 @@ import pandas as pd
 import requests
 from celery import Celery
 
+
+class ScrapingException(Exception):
+    """ Scraping exception"""
+    def __init__(self, msg):
+        self.msg = msg
+        super().__init__(self.msg)
+
+
 CON = 'postgresql://postgres:postgres@postgres:5432/public'
 
 app = Celery('tasks',
@@ -42,61 +50,23 @@ def del_last_data():
     conn.commit()
     conn.close()
 
+
 def init_db():
     """init db"""
     conn = psycopg2.connect(CON)
     cur = conn.cursor()
-    cur.execute('''
-
-drop table if exists hh.ds;
-
-CREATE TABLE public.hh_ds (
-    title text NULL,
-    company text NULL,
-    status text NULL,
-    dt timestamp NULL,
-    expirience text NULL,
-    "money" text NULL,
-    remote text NULL,
-    vac_title text NULL,
-    vac_salary text NULL,
-    vac_exp text NULL,
-    vac_emp text NULL,
-    vac_hiring_format text NULL,
-    vac_working_hours text NULL,
-    vac_work_format text NULL,
-    vac_descr text NULL,
-    vac_id varchar NULL,
-    site varchar(100) NULL DEFAULT 'hh.ru'::character varying
-);
-
-drop table if exists searches;
-
-CREATE TABLE public.searches (
-    request text NULL,
-    phone text NULL,
-    "password" text NULL,
-    site text NULL,
-    enabled bool NULL
-);
-
-drop table if exists vacancy_descriptions;
-
-CREATE TABLE public.vacancy_descriptions (
-    vac_id varchar NULL,
-    vac_title text NULL,
-    vac_salary text NULL,
-    vac_exp text NULL,
-    vac_emp text NULL,
-    vac_hiring_format text NULL,
-    vac_working_hours text NULL,
-    vac_work_format text NULL,
-    vac_descr text NULL,
-    site varchar(100) NULL DEFAULT 'hh.ru'::character varying
-);
-''')
+    sql = open('db_dump.sql').read()
+    cur.execute(sql)
     conn.commit()
     conn.close()
+
+
+def check_db():
+    '''check database and initialize if required'''
+    try:
+        get_active_searches()
+    except:
+        init_db()
 
 
 def grab_hh(phone, password, request):
@@ -109,14 +79,14 @@ def grab_hh(phone, password, request):
                           "phone": phone,
                           "password": password,
                           "request": request
-                        })
+                        }, timeout=2400)
 
     print('res=', res)
     max_try = 5
 
     while not res.ok:
         if max_try == 0:
-            raise Exception('API max retries reached')
+            raise ScrapingException('API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
@@ -125,7 +95,7 @@ def grab_hh(phone, password, request):
                         "phone": phone,
                         "password": password,
                         "request": request
-                        })
+                        }, timeout=2400)
         max_try -= 1
 
     d = res.json()
@@ -146,12 +116,12 @@ def grab_hh(phone, password, request):
                       "phone": phone,
                       "password": password,
                       "vacancy_ids": vac_ids
-                    })
+                    }, timeout=2400)
 
     max_try = 5
     while not res.ok:
         if max_try == 0:
-            raise Exception('Request vac desriptions: API max retries reached')
+            raise ScrapingException('Request vac desriptions: API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
@@ -160,7 +130,7 @@ def grab_hh(phone, password, request):
                           "phone": phone,
                           "password": password,
                           "vacancy_ids": vac_ids
-                        })
+                        }, timeout=2400)
         max_try -= 1
 
 
@@ -170,6 +140,9 @@ def grab_hh(phone, password, request):
     df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 def grab_zp(phone, password, request):
+    """
+    get zarplata.ru vacancies
+    """
     phone=str(phone)
     con = 'postgresql://postgres:postgres@postgres:5432/public'
     res = requests.post('http://zarplata_grabber:8000/find_vacancies',
@@ -183,7 +156,7 @@ def grab_zp(phone, password, request):
 
     while not res.ok:
         if max_try == 0:
-            raise Exception('API max retries reached')
+            raise ScrapingException('API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
@@ -192,7 +165,7 @@ def grab_zp(phone, password, request):
                           "phone": phone,
                           "password": password,
                           "request": request
-                        })
+                        }, timeout=2400)
         max_try -= 1
 
     d=res.json()
@@ -203,7 +176,7 @@ def grab_zp(phone, password, request):
 
 
     # grab new vac_ids
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values 
+    df2 = pd.read_sql('''select vac_id from hh_ds_last_values
     where vac_id not in (select vac_id from vacancy_descriptions where site = 'zarplata.ru')
     and site = 'zarplata.ru' 
     ''', con=con)
@@ -215,12 +188,12 @@ def grab_zp(phone, password, request):
                       "phone": phone,
                       "password": password,
                       "vacancy_ids": vac_ids
-                    })
+                    }, timeout=2400)
 
     max_try = 5
     while not res.ok:
         if max_try == 0:
-            raise Exception('Request vac desriptions: API max retries reached')
+            raise ScrapingException('Request vac desriptions: API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
@@ -229,7 +202,7 @@ def grab_zp(phone, password, request):
                           "phone": phone,
                           "password": password,
                           "vacancy_ids": vac_ids
-                        })
+                        }, timeout=2400)
         max_try -= 1
 
 
