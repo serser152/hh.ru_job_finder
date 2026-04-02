@@ -100,6 +100,12 @@ CREATE TABLE public.vacancy_descriptions (
 );
 
 
+CREATE TABLE public.vacancy_skills (
+    vac_id character varying,
+    vac_skill text,
+);
+
+
 ALTER TABLE public.vacancy_descriptions OWNER TO postgres;
 
 --
