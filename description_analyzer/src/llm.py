@@ -10,16 +10,25 @@ from time import sleep
 from dotenv import load_dotenv, find_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-#from langchain_ollama import ChatOllama
+from langchain_ollama import ChatOllama
 load_dotenv(find_dotenv())
 
 api_key = environ.get("OPENROUTER_API_KEY","")
+llm_type = environ.get("LLM_TYPE","OpenRouter")
+llm_name = environ.get("LLM_NAME","gpt-oss-20b:free")
+ollama_url = environ.get("OLLAMA_URL","http://localhost:11434")
 print(f'or key="{api_key}"')
 
-llm = ChatOpenAI(model='gpt-oss-20b:free',
+if llm_type.lower() == 'openrouter':
+    llm = ChatOpenAI(model=llm_name,
                  base_url="https://openrouter.ai/api/v1",
                  api_key=api_key)
-
+elif llm_type.lower() == 'ollama':
+    llm = ChatOllama(model=llm_name,
+                 base_url=ollama_url)
+else:
+    print('Unknown llm type')
+    raise Exception('Unknown llm type')
 
 desc = """
 Наша исследовательская AI-команда развивает Copilot сотрудника банка – виртуального ассистента, который участвует в диалоге с клиентом. Сейчас Copilot работает у каждого сотрудника отделения: подсказывает, ищет и исправляет ошибки, помогает вести диалог. Вашей задачей будет расширение функционала и улучшение качества работы ассистента, разработка новых продуктов и тестирование перспективных гипотез.
@@ -77,5 +86,5 @@ def parse_desc(desc: str) -> str:
         except Exception as e:
             print(e)
             try_cnt -= 1
-            sleep(2)
+            sleep(10)
     return ""

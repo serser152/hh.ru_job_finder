@@ -94,7 +94,7 @@ def display_settings_tab(result_id):
     if st.button('▶️  parse vacancy'):
         with st.spinner("Loading last data..."):
             data = get_empty_descriptions_data()
-            data = data.head(10)
+            data = data.head(100)
         result = process_description.delay(data.to_json(orient='records'))
         print('Created task:', result.id)
         with st.spinner("processing description..."):
@@ -152,5 +152,5 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id)
 
-time.sleep(600)
-st.rerun()
+#time.sleep(600)
+#st.rerun()
