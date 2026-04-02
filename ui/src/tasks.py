@@ -42,6 +42,13 @@ def get_last_data():
     df2 = pd.read_sql('''select * from hh_ds_last_values''', con=CON)
     return df2
 
+def get_empty_descriptions_data():
+    """get last data without parsed skills"""
+    df2 = pd.read_sql('''select h2.* from hh_ds_last_values h1
+join vacancy_descriptions h2 on h1.vac_id = h2.vac_id
+where h2.vac_id not in (select distinct vac_id from vacancy_skills)
+''', con=CON)
+    return df2
 
 def del_last_data():
     """del last data grabbed"""
@@ -260,9 +267,9 @@ def process_description(self,df):
     df2=pd.read_json(StringIO(df))
     self.update_state(state='PROGRESS', meta={'done': 0})
     for i,row in df2.iterrows():
-        res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
+        res = requests.post('http://description_analyzer:8000/parse_descriptions',
                         json={
-                          "desc": row.description,
+                          "desc": row.vac_descr,
                         }, timeout=100)
         d = res.json()
         df = pd.DataFrame(json.loads(d))

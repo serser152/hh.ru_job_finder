@@ -10,6 +10,7 @@ import streamlit as st
 from tasks import (
     grab,
     get_last_data,
+    get_empty_descriptions_data,
     del_last_data,
     update_db_df,
     get_active_searches,
@@ -92,14 +93,15 @@ def display_settings_tab(result_id):
 
     if st.button('▶️  parse vacancy'):
         with st.spinner("Loading last data..."):
-            data = get_last_data()
+            data = get_empty_descriptions_data()
             data = data.head(10)
         result = process_description.delay(data.to_json(orient='records'))
         print('Created task:', result.id)
         with st.spinner("processing description..."):
             res = app.AsyncResult(result.id)
             while res.state == 'PROGRESS':
-                print(f'DONE = {res.info.get('done', 0)}%')
+                p = res.info.get('done', 0)
+                print(f'DONE = {p}%')
                 time.sleep(10)
                 res = app.AsyncResult(result.id)
 
