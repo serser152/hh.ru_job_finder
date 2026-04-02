@@ -1,5 +1,12 @@
-selenium
 tqdm
 pandas
 fastapi[standard]
 pydantic
+langchain-ollama
+langchain-community
+python-dotenv
+langchain
+dotenv
+langchain_openai
+langchain-core
+langgraph

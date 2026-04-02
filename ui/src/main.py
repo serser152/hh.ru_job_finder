@@ -15,6 +15,7 @@ from tasks import (
     get_active_searches,
     init_db,
     check_db,
+    process_description,
     app)
 
 
@@ -88,6 +89,19 @@ def display_settings_tab(result_id):
             print('Created task:', result.id)
             st.session_state.result_id = result.id
             st.rerun()
+
+    if st.button('▶️  parse vacancy'):
+        with st.spinner("Loading last data..."):
+            data = get_last_data()
+            data = data.head(10)
+        result = process_description.delay(data.to_json(orient='records'))
+        print('Created task:', result.id)
+        with st.spinner("processing description..."):
+            res = app.AsyncResult(result.id)
+            while res.state == 'PROGRESS':
+                print(f'DONE = {res.info.get('done', 0)}%')
+                time.sleep(10)
+                res = app.AsyncResult(result.id)
 
     # print last update time
     if st.session_state.get('get_vacancies_status'):

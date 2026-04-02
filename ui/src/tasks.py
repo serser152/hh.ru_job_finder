@@ -176,7 +176,7 @@ def grab_zp(phone, password, request):
     df = pd.DataFrame(json.loads(d))
     df['dt']=pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
+    df.to_sql('hh_ds',con=CON, if_exists='append',index=False)
 
 
     # grab new vac_ids
@@ -212,7 +212,7 @@ def grab_zp(phone, password, request):
 
     d=res.json()
     df = pd.DataFrame(json.loads(d))
-    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
+    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 
 @app.task(bind=True)
@@ -252,3 +252,24 @@ def grab2(self,df):
     sleep(10)
     self.update_state(state='PROGRESS', meta={'done': 100})
     return [{'request': 123}]
+
+
+@app.task(bind=True)
+def process_description(self,df):
+    """parse vacancies description task"""
+    df2=pd.read_json(StringIO(df))
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
+                        json={
+                          "desc": row.description,
+                        }, timeout=100)
+        d = res.json()
+        df = pd.DataFrame(json.loads(d))
+        df['vac_id'] = row.vac_id
+
+        df.to_sql('vacancy_skills', con=CON, if_exists='append', index=False)
+
+    return 'DONE'
+
+

@@ -23,6 +23,13 @@ services:
     ports:
       - "8501:8501"
 
+  description_analyzer:
+    image: description_analyser:0.1
+    build: description_analyzer
+    ports:
+      - "8003:8000"
+
+
   grafana:
     image: grafana/grafana-enterprise:latest
     restart: unless-stopped
