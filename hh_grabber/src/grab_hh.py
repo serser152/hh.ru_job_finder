@@ -47,9 +47,13 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
 
+    options.page_load_strategy = 'eager'
+
     driver = selenium.webdriver.Firefox(options=options)
 
+    driver.set_page_load_timeout(20)
     driver.get('https://nn.hh.ru')
+    sleep(2)
 
     # accept cookie and accept NN
     find_n_click('Понятно')
@@ -172,7 +176,7 @@ def get_description(vac_id):
     '''parse vacancy details description page'''
 
     driver.get(f'https://hh.ru/vacancy/{vac_id}')
-    sleep(1)
+    sleep(2)
     d = {
         'vac_id': vac_id,
         'vac_title': find_by_qa2('vacancy-title'),
@@ -192,6 +196,7 @@ def get_descriptions_by_ids(vac_ids):
     '''get vacancy details for all vacancy ids'''
     descrs = []
     for i in tqdm(vac_ids):
+        print(f'loading {i} description')
         descrs.append(get_description(i))
     return descrs
 
