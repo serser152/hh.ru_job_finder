@@ -70,7 +70,8 @@ table in fullscreen mode
 ![1](images/example1.png)
 ![2](images/example2.png)
 
+#### skill analysis
+![8](images/example8.png)
+
 #### System monitoring
 ![3](images/example3.png)
-
-

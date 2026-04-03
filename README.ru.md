@@ -70,6 +70,9 @@ docker-compose up -d
 ![1](images/example1.png)
 ![2](images/example2.png)
 
+#### Анализ навыков в вакансиях
+![8](images/example8.png)
+
 #### Мониторинг работы загрузки вакансий
 ![3](images/example3.png)
 
