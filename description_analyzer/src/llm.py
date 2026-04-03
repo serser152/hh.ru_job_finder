@@ -11,24 +11,6 @@ from dotenv import load_dotenv, find_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_ollama import ChatOllama
-load_dotenv(find_dotenv())
-
-api_key = environ.get("OPENROUTER_API_KEY","")
-llm_type = environ.get("LLM_TYPE","OpenRouter")
-llm_name = environ.get("LLM_NAME","gpt-oss-20b:free")
-ollama_url = environ.get("OLLAMA_URL","http://localhost:11434")
-print(f'or key="{api_key}"')
-
-if llm_type.lower() == 'openrouter':
-    llm = ChatOpenAI(model=llm_name,
-                 base_url="https://openrouter.ai/api/v1",
-                 api_key=api_key)
-elif llm_type.lower() == 'ollama':
-    llm = ChatOllama(model=llm_name,
-                 base_url=ollama_url)
-else:
-    print('Unknown llm type')
-    raise Exception('Unknown llm type')
 
 desc = """
 Наша исследовательская AI-команда развивает Copilot сотрудника банка – виртуального ассистента, который участвует в диалоге с клиентом. Сейчас Copilot работает у каждого сотрудника отделения: подсказывает, ищет и исправляет ошибки, помогает вести диалог. Вашей задачей будет расширение функционала и улучшение качества работы ассистента, разработка новых продуктов и тестирование перспективных гипотез.
@@ -73,6 +55,28 @@ fine-tuning
 
 def parse_desc(desc: str) -> str:
     """Parse description to list of keywords"""
+
+
+    load_dotenv(find_dotenv())
+
+    api_key = environ.get("OPENROUTER_API_KEY","")
+    llm_type = environ.get("LLM_TYPE","OpenRouter")
+    llm_name = environ.get("LLM_NAME","gpt-oss-20b:free")
+    ollama_url = environ.get("OLLAMA_URL","http://192.168.31.166:11434")
+    print(f'or key="{api_key}"')
+
+    if llm_type.lower() == 'openrouter':
+        llm = ChatOpenAI(model=llm_name,
+                     base_url="https://openrouter.ai/api/v1",
+                     api_key=api_key)
+    elif llm_type.lower() == 'ollama':
+        llm = ChatOllama(model=llm_name,
+                     base_url=ollama_url)
+    else:
+        print('Unknown llm type')
+        raise Exception('Unknown llm type')
+
+
     prompt = [
         SystemMessage(content="Ты - hr-специалист. Ты должен анализировать вакансии и резюме. Выделять ключевые навыки. Писать на русском языке."+system_prompt),
         HumanMessage(content="Описание вакансии: " + desc + ". Выпиши ключевые навыки по одному в строке?")]
@@ -88,3 +92,5 @@ def parse_desc(desc: str) -> str:
             try_cnt -= 1
             sleep(10)
     return ""
+
+print(parse_desc(desc))

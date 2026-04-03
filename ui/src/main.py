@@ -91,7 +91,7 @@ def display_settings_tab(result_id):
             st.session_state.result_id = result.id
             st.rerun()
 
-    if st.button('▶️  parse vacancy'):
+    if st.button('▶️  parse vacancies skills'):
         with st.spinner("Loading last data..."):
             data = get_empty_descriptions_data()
             data = data.head(100)
