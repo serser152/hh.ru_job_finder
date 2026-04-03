@@ -42,6 +42,13 @@ def get_last_data():
     df2 = pd.read_sql('''select * from hh_ds_last_values''', con=CON)
     return df2
 
+def get_empty_descriptions_data():
+    """get last data without parsed skills"""
+    df2 = pd.read_sql('''select h2.* from hh_ds_last_values h1
+join vacancy_descriptions h2 on h1.vac_id = h2.vac_id
+where h2.vac_id not in (select distinct vac_id from vacancy_skills)
+''', con=CON)
+    return df2
 
 def del_last_data():
     """del last data grabbed"""
@@ -176,7 +183,7 @@ def grab_zp(phone, password, request):
     df = pd.DataFrame(json.loads(d))
     df['dt']=pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
+    df.to_sql('hh_ds',con=CON, if_exists='append',index=False)
 
 
     # grab new vac_ids
@@ -212,7 +219,7 @@ def grab_zp(phone, password, request):
 
     d=res.json()
     df = pd.DataFrame(json.loads(d))
-    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
+    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 
 @app.task(bind=True)
@@ -252,3 +259,24 @@ def grab2(self,df):
     sleep(10)
     self.update_state(state='PROGRESS', meta={'done': 100})
     return [{'request': 123}]
+
+
+@app.task(bind=True)
+def process_description(self,df):
+    """parse vacancies description task"""
+    df2=pd.read_json(StringIO(df))
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        res = requests.post('http://description_analyzer:8000/parse_descriptions',
+                        json={
+                          "desc": row.vac_descr,
+                        }, timeout=100)
+        d = res.json()
+        df = pd.DataFrame(json.loads(d))
+        df['vac_id'] = row.vac_id
+
+        df.to_sql('vacancy_skills', con=CON, if_exists='append', index=False)
+
+    return 'DONE'
+
+

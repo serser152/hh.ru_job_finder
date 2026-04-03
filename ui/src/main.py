@@ -10,11 +10,13 @@ import streamlit as st
 from tasks import (
     grab,
     get_last_data,
+    get_empty_descriptions_data,
     del_last_data,
     update_db_df,
     get_active_searches,
     init_db,
     check_db,
+    process_description,
     app)
 
 
@@ -89,6 +91,20 @@ def display_settings_tab(result_id):
             st.session_state.result_id = result.id
             st.rerun()
 
+    if st.button('▶️  parse vacancies skills'):
+        with st.spinner("Loading last data..."):
+            data = get_empty_descriptions_data()
+            data = data.head(100)
+        result = process_description.delay(data.to_json(orient='records'))
+        print('Created task:', result.id)
+        with st.spinner("processing description..."):
+            res = app.AsyncResult(result.id)
+            while res.state == 'PROGRESS':
+                p = res.info.get('done', 0)
+                print(f'DONE = {p}%')
+                time.sleep(10)
+                res = app.AsyncResult(result.id)
+
     # print last update time
     if st.session_state.get('get_vacancies_status'):
         st.write(st.session_state.get('get_vacancies_status'))
@@ -136,5 +152,5 @@ with tab_count_by:
 with tab_settings:
     display_settings_tab(grabber_result_id)
 
-time.sleep(600)
-st.rerun()
+#time.sleep(600)
+#st.rerun()
