@@ -35,7 +35,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "right",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
@@ -112,8 +112,37 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "select date(dt) date, count(*) vac_count\nfrom hh_ds \ngroup by 1\norder by 1",
+          "rawSql": "select date(dt) date, count(*) \"hh.ru vacancies\"\nfrom hh_ds \nwhere site = 'hh.ru'\ngroup by 1\norder by 1",
           "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "public",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select date(dt) date, count(*) \"zarplata.ru vacancies\"\nfrom hh_ds \nwhere site = 'zarplata.ru'\ngroup by 1\norder by 1",
+          "refId": "B",
           "sql": {
             "columns": [
               {
@@ -382,7 +411,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "with cte1 as (\n  select distinct dt\n  from hh_ds order by 1),\ncte2 as (\n  SELECT hh_ds.dt, COUNT(*) AS \"error count\" \n  FROM hh_ds \n  left join vacancy_descriptions vd on hh_ds.vac_id = vd.vac_id\n  WHERE vd.vac_id IS NULL \n  GROUP BY dt \n)\nselect cte1.*,coalesce(cte2.\"error count\",0)\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
+          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from hh_ds order by 1),\ncte2 as (\n  SELECT hh_ds.dt::date, COUNT(*) AS \"error count\" \n  FROM hh_ds \n  left join vacancy_descriptions vd on hh_ds.vac_id = vd.vac_id\n  WHERE vd.vac_id IS NULL \n  GROUP BY dt \n)\nselect cte1.*,coalesce(cte2.\"error count\",0)\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -442,6 +471,118 @@
       ],
       "title": "Error rate",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "affpqs7gqbcw0a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "public",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from hh_ds order by 1),\ncte2 as (\n  SELECT hh_ds.dt::date, COUNT(*) AS \"error count\" \n  FROM hh_ds \n  WHERE hh_ds.vac_id not in (select distinct vac_id from vacancy_skills)\n  GROUP BY 1\n)\nselect cte1.*,coalesce(cte2.\"error count\",0) \"not parsed vacancies\"\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "not parsed vacancies",
+      "type": "timeseries"
     }
   ],
   "preload": false,
@@ -451,13 +592,13 @@
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "hh.ru monitor",
   "uid": "advvv9z",
-  "version": 10,
+  "version": 12,
   "weekStart": ""
 }

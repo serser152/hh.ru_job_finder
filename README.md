@@ -5,7 +5,8 @@
 ## Goals
   - Market analysis (vacancy count, main companies, job parameters)
   - Find and respond to vacancies
-  - Automatic vacancies matching, skills analysis (TBD)
+  - Vacancies skills analysis
+  - Automatic vacancies matching/responsing (TBD)
 
 ## Supported sites
   - hh.ru
@@ -27,15 +28,15 @@ docker-compose build
 docker-compose up -d
 ```
 
+
+Configure .env variables
+
 UI - [http://localhost:8501](http://localhost:8501)
 grafana interface - [http://localhost:3000](http://localhost:3000)
 Import grafana dashboards from "grafana_dashboards" folder.
 
-2) Configure password access on sites
+2) Configure password access on sites. Make a test search via site web-interface.
 3) Enter the UI settings tab and add grab request.
-4)
-
-
 
 
 ## Architecture
@@ -48,7 +49,7 @@ Service implemented via docker containers. There are following containers:
 - gui (streamlit + celery)
 - redis (for celery)
 - rabbitmq (for celery)
-
+- description_analyser (langchain/openrouter/ollama)
 ## Examples
 
 ### UI

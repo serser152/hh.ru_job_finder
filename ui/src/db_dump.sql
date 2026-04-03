@@ -100,10 +100,38 @@ CREATE TABLE public.vacancy_descriptions (
 );
 
 
+
+
+
 CREATE TABLE public.vacancy_skills (
     vac_id character varying,
-    vac_skill text,
+    skill text
 );
+
+
+ALTER TABLE public.vacancy_skills OWNER TO postgres;
+
+--
+-- Name: last_vacancies_with_skills; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.last_vacancies_with_skills AS
+ SELECT vs.skill,
+    h1.title,
+    h1.company,
+    h1.status,
+    h1.dt,
+    h1.expirience,
+    h1.money,
+    h1.remote,
+    h1.vac_id,
+    h1.site,
+    h1.link
+   FROM (public.hh_ds_last_values h1
+     JOIN public.vacancy_skills vs ON (((vs.vac_id)::text = (h1.vac_id)::text)));
+
+
+ALTER VIEW public.last_vacancies_with_skills OWNER TO postgres;
 
 
 ALTER TABLE public.vacancy_descriptions OWNER TO postgres;

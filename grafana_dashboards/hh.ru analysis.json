@@ -22,7 +22,7 @@
   "links": [],
   "panels": [
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -30,752 +30,876 @@
         "y": 0
       },
       "id": 6,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 17,
+            "x": 0,
+            "y": 30
+          },
+          "id": 1,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "affpqs7gqbcw0a"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT company,COUNT(*) as cnt \nFROM hh_ds_last_values \nwhere company in ($company)\n  and expirience in ($expirience) \nGROUP BY 1 \norder by cnt desc LIMIT 10 ",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "name": "COUNT",
+                    "parameters": [
+                      {
+                        "name": "company",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "name": "company",
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "hh_ds"
+            },
+            {
+              "dataset": "public",
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "affpqs7gqbcw0a"
+              },
+              "editorMode": "builder",
+              "format": "table",
+              "rawSql": "",
+              "refId": "B"
+            }
+          ],
+          "title": "Топ 10 компаний по количеству вакансий",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 37
+          },
+          "id": 8,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select coalesce(substring(vd.vac_work_format from 15),'Не указано') \"Формат работы\",count(*)\n from hh_ds_last_values hdlv \n join vacancy_descriptions vd  on vd.vac_id = hdlv.vac_id \n where hdlv.company in ($company)\n and hdlv.expirience in ($expirience) \n group by 1\n order by 2 desc",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Формат работы",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 5,
+            "x": 12,
+            "y": 37
+          },
+          "id": 2,
+          "options": {
+            "displayLabels": [
+              "name"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "sort": "desc",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT expirience, COUNT(*) cnt\nFROM hh_ds_last_values \nwhere company in ($company)\n  and expirience in ($expirience) \nGROUP BY 1 \norder by 2 desc",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [
+                      {
+                        "name": "expirience",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  },
+                  {
+                    "name": "COUNT",
+                    "parameters": [
+                      {
+                        "name": "expirience",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "name": "expirience",
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "hh_ds_last_values"
+            }
+          ],
+          "title": "Распределение вакансий по опыту",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 45
+          },
+          "id": 7,
+          "options": {
+            "combine": false,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": " with cte1 as (\n\tselect money, regexp_replace(replace(hdlv.money,'000',''), '(\\d+)\\s+(\\d+)','\\1\\2','g') money2\n\tfrom hh_ds_last_values hdlv \n\twhere hdlv.money like '%₽%'\n\tand company in ($company)\n  and expirience in ($expirience) \n\n\t--and hdlv.money not like '%–%'\n),\ncte2 as (\nselect money2, regexp_match(money2,'\\d+')::int[] money_arr \nfrom cte1\n)\nselect money_arr[1] \"зарплата\"\nfrom cte2",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [
+                      {
+                        "name": "money",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  },
+                  {
+                    "name": "COUNT",
+                    "parameters": [
+                      {
+                        "name": "money",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "name": "money",
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 20,
+                "orderBy": {
+                  "property": {
+                    "name": "COUNT(money)",
+                    "type": "string"
+                  },
+                  "type": "property"
+                },
+                "orderByDirection": "DESC",
+                "whereJsonTree": {
+                  "children1": [
+                    {
+                      "id": "a89b98bb-cdef-4012-b456-719ce6936536",
+                      "properties": {
+                        "field": "money",
+                        "fieldSrc": "field",
+                        "operator": "is_not_null",
+                        "value": [],
+                        "valueSrc": [],
+                        "valueType": []
+                      },
+                      "type": "rule"
+                    }
+                  ],
+                  "id": "9b98bab9-0123-4456-b89a-b19ce6922cb2",
+                  "type": "group"
+                },
+                "whereString": "money IS NOT NULL"
+              },
+              "table": "hh_ds_last_values"
+            }
+          ],
+          "title": "Распределение зарплат",
+          "type": "histogram"
+        }
+      ],
       "title": "Анализ рынка",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 17,
-        "x": 0,
-        "y": 1
-      },
-      "id": 1,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "public",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "affpqs7gqbcw0a"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT company,COUNT(*) as cnt \nFROM hh_ds_last_values \nwhere company in ($company)\n  and expirience in ($expirience) \nGROUP BY 1 \norder by cnt desc LIMIT 10 ",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "company",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "name": "company",
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          },
-          "table": "hh_ds"
-        },
-        {
-          "dataset": "public",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "affpqs7gqbcw0a"
-          },
-          "editorMode": "builder",
-          "format": "table",
-          "rawSql": "",
-          "refId": "B"
-        }
-      ],
-      "title": "Топ 10 компаний по количеству вакансий",
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 8,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "public",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "select coalesce(substring(vd.vac_work_format from 15),'Не указано') \"Формат работы\",count(*)\n from hh_ds_last_values hdlv \n join vacancy_descriptions vd  on vd.vac_id = hdlv.vac_id \n where hdlv.company in ($company)\n and hdlv.expirience in ($expirience) \n group by 1\n order by 2 desc",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Формат работы",
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 12,
-        "y": 8
-      },
-      "id": 2,
-      "options": {
-        "displayLabels": [
-          "name"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "sort": "desc",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "asc"
-        }
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "public",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT expirience, COUNT(*) cnt\nFROM hh_ds_last_values \nwhere company in ($company)\n  and expirience in ($expirience) \nGROUP BY 1 \norder by 2 desc",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [
-                  {
-                    "name": "expirience",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              },
-              {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "expirience",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "name": "expirience",
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          },
-          "table": "hh_ds_last_values"
-        }
-      ],
-      "title": "Распределение вакансий по опыту",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
-          },
-          "fieldMinMax": true,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "id": 7,
-      "options": {
-        "combine": false,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "public",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": " with cte1 as (\n\tselect money, regexp_replace(replace(hdlv.money,'000',''), '(\\d+)\\s+(\\d+)','\\1\\2','g') money2\n\tfrom hh_ds_last_values hdlv \n\twhere hdlv.money like '%₽%'\n\tand company in ($company)\n  and expirience in ($expirience) \n\n\t--and hdlv.money not like '%–%'\n),\ncte2 as (\nselect money2, regexp_match(money2,'\\d+')::int[] money_arr \nfrom cte1\n)\nselect money_arr[1] \"зарплата\"\nfrom cte2",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [
-                  {
-                    "name": "money",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              },
-              {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "money",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "name": "money",
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 20,
-            "orderBy": {
-              "property": {
-                "name": "COUNT(money)",
-                "type": "string"
-              },
-              "type": "property"
-            },
-            "orderByDirection": "DESC",
-            "whereJsonTree": {
-              "children1": [
-                {
-                  "id": "a89b98bb-cdef-4012-b456-719ce6936536",
-                  "properties": {
-                    "field": "money",
-                    "fieldSrc": "field",
-                    "operator": "is_not_null",
-                    "value": [],
-                    "valueSrc": [],
-                    "valueType": []
-                  },
-                  "type": "rule"
-                }
-              ],
-              "id": "9b98bab9-0123-4456-b89a-b19ce6922cb2",
-              "type": "group"
-            },
-            "whereString": "money IS NOT NULL"
-          },
-          "table": "hh_ds_last_values"
-        }
-      ],
-      "title": "Распределение зарплат",
-      "type": "histogram"
-    },
-    {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 1
       },
-      "id": 5,
-      "panels": [],
-      "title": "Работа с вакансиями",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": true,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 29,
-            "gradientMode": "hue",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "showValues": true,
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 17,
-        "x": 0,
-        "y": 25
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
+      "id": 9,
+      "panels": [
         {
-          "dataset": "public",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "select dt, count(distinct vac_id) \"Отказы\"\nfrom hh_ds\nwhere status = 'Вам отказали' \nGROUP BY 1",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        },
-        {
-          "dataset": "public",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "affpqs7gqbcw0a"
           },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "select dt, count(*) \"Отклики\"\nfrom hh_ds\nwhere status = 'Вы откликнулись' \nGROUP BY 1",
-          "refId": "B",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
                 },
-                "type": "groupBy"
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
               }
-            ],
-            "limit": 50
-          }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 14,
+            "w": 10,
+            "x": 0,
+            "y": 2
+          },
+          "id": 10,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select skill, count(*)\nFROM last_vacancies_with_skills \nwhere company in ($company)\n  and expirience in ($expirience)\ngroup by 1\norder by 2 desc\nlimit 20",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Top 20 skills",
+          "type": "barchart"
         }
       ],
-      "title": "Отклики/Отказы",
-      "type": "timeseries"
+      "title": "Skills analysis",
+      "type": "row"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "affpqs7gqbcw0a"
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
+      "id": 5,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": true,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 29,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "showValues": true,
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
             },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 17,
+            "x": 0,
+            "y": 39
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
             },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select dt, count(distinct vac_id) \"Отказы\"\nfrom hh_ds\nwhere status = 'Вам отказали' \nGROUP BY 1",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            },
+            {
+              "dataset": "public",
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "affpqs7gqbcw0a"
               },
-              {
-                "color": "red",
-                "value": 80
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select dt, count(*) \"Отклики\"\nfrom hh_ds\nwhere status = 'Вы откликнулись' \nGROUP BY 1",
+              "refId": "B",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
               }
-            ]
-          }
+            }
+          ],
+          "title": "Отклики/Отказы",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 17,
-        "y": 25
-      },
-      "id": 3,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
         {
-          "dataset": "public",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "select status, count(distinct vac_id) \"Количество\"\nfrom hh_ds_last_values GROUP BY 1",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "affpqs7gqbcw0a"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
                 },
-                "type": "groupBy"
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
               }
-            ],
-            "limit": 50
-          }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 7,
+            "x": 17,
+            "y": 39
+          },
+          "id": 3,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "12.4.1",
+          "targets": [
+            {
+              "dataset": "public",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select status, count(distinct vac_id) \"Количество\"\nfrom hh_ds_last_values GROUP BY 1",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Статусы вакансий",
+          "type": "barchart"
         }
       ],
-      "title": "Статусы вакансий",
-      "type": "barchart"
+      "title": "Работа с вакансиями",
+      "type": "row"
     }
   ],
   "preload": false,
@@ -788,10 +912,14 @@
         "current": {
           "text": [
             "Опыт 1-3 года",
+            "Опыт 3-6 лет",
+            "Опыт более 6 лет",
             "Без опыта"
           ],
           "value": [
             "Опыт 1-3 года",
+            "Опыт 3-6 лет",
+            "Опыт более 6 лет",
             "Без опыта"
           ]
         },
@@ -846,576 +974,16 @@
       {
         "current": {
           "text": [
-            "\"МТС\", Работа в IT",
-            "2ГИС.RnD",
-            "ANCOR",
-            "ARHITEX",
-            "ATI.SU",
-            "AVO.UZ",
-            "AbbVie",
-            "Aiti Guru",
-            "Antal Talent",
-            "AppMagic",
-            "AppScience",
-            "ArtWorkout",
-            "Artificial Seed",
-            "Aston",
-            "Axiom Pro",
-            "BeRecruited",
-            "Bell Integrator",
-            "Bell Integrator Регионы",
-            "BostonGene Technologies",
-            "Changellenge",
-            "Codemate Team (ИП Дегтярев Михаил Алексеевич)",
-            "Cornerstone Russia",
-            "DCloud",
-            "DENIS Pharm Group",
-            "DM Solutions",
-            "Data Light",
-            "DatsTeam",
-            "Diamond Personnel R&C",
-            "E-PROMO",
-            "Enterprise Innovation Consulting, LLC",
-            "Finstar Financial Group",
-            "Fix Price. Офис",
-            "Future Focus",
-            "FxPro",
-            "Genesis Group AG",
-            "Grand Line",
-            "HR Bar",
-            "Heaad",
-            "Hi, Rockits!",
-            "Hyper AdTech",
-            "IBS",
-            "IndigoSoft",
-            "Insquad",
-            "Intelsy",
-            "International School of Saint Petersburg",
-            "Johnson & Johnson",
-            "KTS",
-            "Koronatech",
-            "Lamoda Tech",
-            "Lenkep recruitment",
-            "Level Group",
-            "Loyalty Labs",
-            "MAR Consult",
-            "MARIS",
-            "MARSHALL",
-            "MDCE（苏州希毅医学研究有限公司）",
-            "MLinside",
-            "Mindbox",
-            "MoneyCat",
-            "Navio",
-            "ORO",
-            "Outlines Technologies",
-            "Ozon Tech",
-            "Ozon Банк",
-            "ROCKSTONE",
-            "RWB (Wildberries & Russ)",
-            "Rambler&Co",
-            "Rambler&Co Портал \"Рамблер\"",
-            "Rubbles",
-            "Rubius",
-            "S8 Capital",
-            "SWTecNN",
-            "SberTech",
-            "Sciencely",
-            "Selecty",
-            "Simplenight",
-            "Simulative",
-            "Spice IT",
-            "Star-Staff",
-            "Techno Diasoft",
-            "Trading Integral Solutions",
-            "USETECH",
-            "UZUM TECHNOLOGIES. IT",
-            "Wellbrands Solutions",
-            "X5 Tech",
-            "YADRO",
-            "bpm",
-            "getmatch",
-            "metaLead",
-            "«Procter & Gamble», Студент",
-            "АВИТО ТЕХ: разработка",
-            "АГАТ РФ",
-            "АКБ Национальный Резервный Банк",
-            "АНК ДИДЖ",
-            "АО БКС Банк",
-            "АО Банк ДОМ.РФ Другие подразделения",
-            "АО ГК Орбита",
-            "АО Группа Илим",
-            "АО ДКС",
-            "АО Институт экономики и развития транспорта",
-            "АО Мособлгаз",
-            "АО НИИГРАФИТ",
-            "АО Национальная система платежных карт",
-            "АО Промышленные инновации",
-            "АО РНГ",
-            "АО РНПК",
-            "АО СимбирСофт",
-            "АО ФИНАМ",
-            "АО Цифровой семейный офис",
-            "АО Эйлер Аналитические Технологии",
-            "АПТЕКИ ВАША № 1",
-            "Адвирос",
-            "Альфа-Банк. Работа без опыта",
-            "Альфа-Банк. Центральный офис",
-            "Аналитический Центр Минприроды России",
-            "Арнест ЮниРусь",
-            "Асылгареева Алина Айдаровна",
-            "БУРГЕР КИНГ РОССИЯ",
-            "Битрикс24",
-            "Бэнкс Софт Системс",
-            "ВЭБ.РФ",
-            "ВЭЙ-ГРУПП",
-            "Вильдяев Владислав Алексеевич",
-            "Вкусно — и точка",
-            "ГБУ МФЦ города Москвы Мои документы",
-            "ГК Дамате",
-            "ГРЧЦ, ФГУП",
-            "Газпромбанк",
-            "Газпромбанк. IT&Digital. Разработка",
-            "Газпромбанк. IT&Digital.Аналитика",
-            "Геномед",
-            "Гортис Софт Лаб",
-            "Государственное казенное учреждение Московской Области «Центр Компетенций Госуправления»",
-            "Гребнев Виталий",
-            "Группа компаний «Group4Media», Управляющая компания",
-            "Детский мир. ДМ-тех",
-            "Детский мир. Офис",
-            "Домклик",
-            "ЕМЕ",
-            "ИП Абаскулиева Елена Рафаиловна",
-            "ИП Котенков Максим Евгеньевич",
-            "ИП Лобанова Мария Алексеевна",
-            "ИП Уткин Сергей Владимирович",
-            "ИТ",
-            "Ингосстрах",
-            "Инфосистемы Джет",
-            "КРОК",
-            "Карпов Курсес",
-            "Контур",
-            "Корпоративный университет Сбербанка",
-            "Корпорация Галактика",
-            "Криптонит",
-            "Крупный российский банк",
-            "Купер Разработка",
-            "ЛИАН",
-            "Лаборатория Касперского",
-            "Лента, федеральная розничная сеть, Работа в IT",
-            "Леста Игры",
-            "Лига Цифровой Экономики",
-            "М.Видео-Эльдорадо. ИТ",
-            "М.Видео-Эльдорадо. Офис",
-            "МАГНИТ, Розничная сеть. IT",
-            "МТС Банк. Головной офис",
-            "Магнит OMNI",
-            "Медиалогия",
-            "Международная fintech компания",
-            "Много лосося",
-            "Мокка",
-            "Московский Кредитный Банк. Профессионалы",
-            "Московский Кредитный Банк. Руководители",
-            "Московский Кредитный Банк. Эксперты",
-            "НЕЙРОВИЖН",
-            "НИЖФАРМ",
-            "НИИ Восход",
-            "НОВАТЭК",
-            "Нильсен",
-            "ООО HeadHunter::Analytics/Data Science",
-            "ООО HeadHunter::Product Management",
-            "ООО HeadHunter::Продуктовые аналитики",
-            "ООО JSA Group",
-            "ООО PepsiCo",
-            "ООО WaveAccess",
-            "ООО АФЛТ-Системс",
-            "ООО Банкирро",
-            "ООО Белка Диджитал",
-            "ООО Бристоль, сеть магазинов, Работа в IT-сфере",
-            "ООО Бюро судебного взыскания",
-            "ООО В Кадре",
-            "ООО ВИГО",
-            "ООО Газпромнефть-Региональные продажи",
-            "ООО Гудфокаст",
-            "ООО Е-Флопс",
-            "ООО Звук",
-            "ООО Зигмунд Онлайн",
-            "ООО ИЦ АЙ-ТЕКО",
-            "ООО Ит-Финанс",
-            "ООО Кибертех",
-            "ООО Лартех Телеком",
-            "ООО МКК ДеньгиОК",
-            "ООО МФК Фордевинд",
-            "ООО Марс",
-            "ООО Медиапоинт",
-            "ООО НПХ Амарантагро",
-            "ООО Наймикс",
-            "ООО Овербест Рус",
-            "ООО Оптимакрос",
-            "ООО ОптималФлоу Групп",
-            "ООО ПКО РегионКонсалт",
-            "ООО Петрович-Тех",
-            "ООО Про.Потолок",
-            "ООО ПрофХолод",
-            "ООО Рндмоушн",
-            "ООО Ростелеком Информационные Технологии",
-            "ООО СК Сбербанк страхование жизни",
-            "ООО СККИА",
-            "ООО Салют для Бизнеса",
-            "ООО Сбер Бизнес Софт",
-            "ООО Сбербанк Факторинг",
-            "ООО Специальный Технологический Центр (ООО СТЦ)",
-            "ООО Страховая компания Сбербанк страхование",
-            "ООО Страховой брокер Сбербанка",
-            "ООО Т-Студия",
-            "ООО Тагес Джамп",
-            "ООО Техностар",
-            "ООО Торговая Компания Семь Братьев",
-            "ООО УайтСнейк",
-            "ООО Финфрейм",
-            "ООО Фирма Топред",
-            "ООО Цифров",
-            "ООО Эвокарго",
-            "ОТП Банк. Бизнес",
-            "ОТП Банк. Работа с клиентами",
-            "Облачные, инфраструктурные сервисы и Яндекс 360",
-            "Островок.Ostrovok!Tech",
-            "Островок.Маркетинг",
-            "ПАО БАНК УРАЛСИБ",
-            "ПАО Банк ПСБ, Бизнес и инфраструктура",
-            "ПАО Банк Санкт-Петербург",
-            "ПАО ВТБ, Подразделения Поддержки и Контроля",
-            "ПАО ВТБ, Технологический блок",
-            "ПАО МегаФон, IT",
-            "ПАО Ростелеком",
-            "ПАО Совкомбанк",
-            "Первый ОФД",
-            "Платформа ОФД",
-            "Правила Мебели",
-            "Правительство Москвы",
-            "РОСКОСМОС",
-            "РУСАЛ",
-            "Росгосстрах",
-            "Сloud.ru: Разработка",
-            "СБЕРКОРУС",
-            "СИНТЕЗ ВОСТОК",
-            "Сахалин - Остров Возможностей",
-            "Сбер для экспертов",
             "Сбер. Data Science",
             "Сбер. IT",
             "Сбер. Кибербезопасность",
-            "Сбер. Начало карьеры",
-            "СберЗдоровье",
-            "Сибур",
-            "Сибур. Cибур Диджитал",
-            "Студия Кефир",
-            "Суточно.ру",
-            "Т-Банк. ИТ. Аналитика",
-            "ТМК++",
-            "Тануки, японский ресторан",
-            "ТехВилл",
-            "Точка Банк",
-            "Университет ИТМО",
-            "ФГАОУ ВО МГТУ им. Н.Э. Баумана",
-            "ФГБОУ ДПО РАКО АПК",
-            "ФКУ ГОСУДАРСТВЕННЫЕ ТЕХНОЛОГИИ",
-            "Федеральное автономное учреждение «Национальный институт аккредитации» (ФАУ НИА)",
-            "Центральный банк Российской Федерации (Банк России)",
-            "Циан",
-            "Чернышов Григорий Васильевич",
-            "Электронная торговая площадка Газпромбанка",
-            "Эмбедика",
-            "Эталон-Тех",
-            "Яков и Партнёры",
-            "Яндекс",
-            "Яндекс Путешествия",
-            "крупный игровой холдинг"
+            "Сбер. Начало карьеры"
           ],
           "value": [
-            "\"МТС\", Работа в IT",
-            "2ГИС.RnD",
-            "ANCOR",
-            "ARHITEX",
-            "ATI.SU",
-            "AVO.UZ",
-            "AbbVie",
-            "Aiti Guru",
-            "Antal Talent",
-            "AppMagic",
-            "AppScience",
-            "ArtWorkout",
-            "Artificial Seed",
-            "Aston",
-            "Axiom Pro",
-            "BeRecruited",
-            "Bell Integrator",
-            "Bell Integrator Регионы",
-            "BostonGene Technologies",
-            "Changellenge",
-            "Codemate Team (ИП Дегтярев Михаил Алексеевич)",
-            "Cornerstone Russia",
-            "DCloud",
-            "DENIS Pharm Group",
-            "DM Solutions",
-            "Data Light",
-            "DatsTeam",
-            "Diamond Personnel R&C",
-            "E-PROMO",
-            "Enterprise Innovation Consulting, LLC",
-            "Finstar Financial Group",
-            "Fix Price. Офис",
-            "Future Focus",
-            "FxPro",
-            "Genesis Group AG",
-            "Grand Line",
-            "HR Bar",
-            "Heaad",
-            "Hi, Rockits!",
-            "Hyper AdTech",
-            "IBS",
-            "IndigoSoft",
-            "Insquad",
-            "Intelsy",
-            "International School of Saint Petersburg",
-            "Johnson & Johnson",
-            "KTS",
-            "Koronatech",
-            "Lamoda Tech",
-            "Lenkep recruitment",
-            "Level Group",
-            "Loyalty Labs",
-            "MAR Consult",
-            "MARIS",
-            "MARSHALL",
-            "MDCE（苏州希毅医学研究有限公司）",
-            "MLinside",
-            "Mindbox",
-            "MoneyCat",
-            "Navio",
-            "ORO",
-            "Outlines Technologies",
-            "Ozon Tech",
-            "Ozon Банк",
-            "ROCKSTONE",
-            "RWB (Wildberries & Russ)",
-            "Rambler&Co",
-            "Rambler&Co Портал \"Рамблер\"",
-            "Rubbles",
-            "Rubius",
-            "S8 Capital",
-            "SWTecNN",
-            "SberTech",
-            "Sciencely",
-            "Selecty",
-            "Simplenight",
-            "Simulative",
-            "Spice IT",
-            "Star-Staff",
-            "Techno Diasoft",
-            "Trading Integral Solutions",
-            "USETECH",
-            "UZUM TECHNOLOGIES. IT",
-            "Wellbrands Solutions",
-            "X5 Tech",
-            "YADRO",
-            "bpm",
-            "getmatch",
-            "metaLead",
-            "«Procter & Gamble», Студент",
-            "АВИТО ТЕХ: разработка",
-            "АГАТ РФ",
-            "АКБ Национальный Резервный Банк",
-            "АНК ДИДЖ",
-            "АО БКС Банк",
-            "АО Банк ДОМ.РФ Другие подразделения",
-            "АО ГК Орбита",
-            "АО Группа Илим",
-            "АО ДКС",
-            "АО Институт экономики и развития транспорта",
-            "АО Мособлгаз",
-            "АО НИИГРАФИТ",
-            "АО Национальная система платежных карт",
-            "АО Промышленные инновации",
-            "АО РНГ",
-            "АО РНПК",
-            "АО СимбирСофт",
-            "АО ФИНАМ",
-            "АО Цифровой семейный офис",
-            "АО Эйлер Аналитические Технологии",
-            "АПТЕКИ ВАША № 1",
-            "Адвирос",
-            "Альфа-Банк. Работа без опыта",
-            "Альфа-Банк. Центральный офис",
-            "Аналитический Центр Минприроды России",
-            "Арнест ЮниРусь",
-            "Асылгареева Алина Айдаровна",
-            "БУРГЕР КИНГ РОССИЯ",
-            "Битрикс24",
-            "Бэнкс Софт Системс",
-            "ВЭБ.РФ",
-            "ВЭЙ-ГРУПП",
-            "Вильдяев Владислав Алексеевич",
-            "Вкусно — и точка",
-            "ГБУ МФЦ города Москвы Мои документы",
-            "ГК Дамате",
-            "ГРЧЦ, ФГУП",
-            "Газпромбанк",
-            "Газпромбанк. IT&Digital. Разработка",
-            "Газпромбанк. IT&Digital.Аналитика",
-            "Геномед",
-            "Гортис Софт Лаб",
-            "Государственное казенное учреждение Московской Области «Центр Компетенций Госуправления»",
-            "Гребнев Виталий",
-            "Группа компаний «Group4Media», Управляющая компания",
-            "Детский мир. ДМ-тех",
-            "Детский мир. Офис",
-            "Домклик",
-            "ЕМЕ",
-            "ИП Абаскулиева Елена Рафаиловна",
-            "ИП Котенков Максим Евгеньевич",
-            "ИП Лобанова Мария Алексеевна",
-            "ИП Уткин Сергей Владимирович",
-            "ИТ",
-            "Ингосстрах",
-            "Инфосистемы Джет",
-            "КРОК",
-            "Карпов Курсес",
-            "Контур",
-            "Корпоративный университет Сбербанка",
-            "Корпорация Галактика",
-            "Криптонит",
-            "Крупный российский банк",
-            "Купер Разработка",
-            "ЛИАН",
-            "Лаборатория Касперского",
-            "Лента, федеральная розничная сеть, Работа в IT",
-            "Леста Игры",
-            "Лига Цифровой Экономики",
-            "М.Видео-Эльдорадо. ИТ",
-            "М.Видео-Эльдорадо. Офис",
-            "МАГНИТ, Розничная сеть. IT",
-            "МТС Банк. Головной офис",
-            "Магнит OMNI",
-            "Медиалогия",
-            "Международная fintech компания",
-            "Много лосося",
-            "Мокка",
-            "Московский Кредитный Банк. Профессионалы",
-            "Московский Кредитный Банк. Руководители",
-            "Московский Кредитный Банк. Эксперты",
-            "НЕЙРОВИЖН",
-            "НИЖФАРМ",
-            "НИИ Восход",
-            "НОВАТЭК",
-            "Нильсен",
-            "ООО HeadHunter::Analytics/Data Science",
-            "ООО HeadHunter::Product Management",
-            "ООО HeadHunter::Продуктовые аналитики",
-            "ООО JSA Group",
-            "ООО PepsiCo",
-            "ООО WaveAccess",
-            "ООО АФЛТ-Системс",
-            "ООО Банкирро",
-            "ООО Белка Диджитал",
-            "ООО Бристоль, сеть магазинов, Работа в IT-сфере",
-            "ООО Бюро судебного взыскания",
-            "ООО В Кадре",
-            "ООО ВИГО",
-            "ООО Газпромнефть-Региональные продажи",
-            "ООО Гудфокаст",
-            "ООО Е-Флопс",
-            "ООО Звук",
-            "ООО Зигмунд Онлайн",
-            "ООО ИЦ АЙ-ТЕКО",
-            "ООО Ит-Финанс",
-            "ООО Кибертех",
-            "ООО Лартех Телеком",
-            "ООО МКК ДеньгиОК",
-            "ООО МФК Фордевинд",
-            "ООО Марс",
-            "ООО Медиапоинт",
-            "ООО НПХ Амарантагро",
-            "ООО Наймикс",
-            "ООО Овербест Рус",
-            "ООО Оптимакрос",
-            "ООО ОптималФлоу Групп",
-            "ООО ПКО РегионКонсалт",
-            "ООО Петрович-Тех",
-            "ООО Про.Потолок",
-            "ООО ПрофХолод",
-            "ООО Рндмоушн",
-            "ООО Ростелеком Информационные Технологии",
-            "ООО СК Сбербанк страхование жизни",
-            "ООО СККИА",
-            "ООО Салют для Бизнеса",
-            "ООО Сбер Бизнес Софт",
-            "ООО Сбербанк Факторинг",
-            "ООО Специальный Технологический Центр (ООО СТЦ)",
-            "ООО Страховая компания Сбербанк страхование",
-            "ООО Страховой брокер Сбербанка",
-            "ООО Т-Студия",
-            "ООО Тагес Джамп",
-            "ООО Техностар",
-            "ООО Торговая Компания Семь Братьев",
-            "ООО УайтСнейк",
-            "ООО Финфрейм",
-            "ООО Фирма Топред",
-            "ООО Цифров",
-            "ООО Эвокарго",
-            "ОТП Банк. Бизнес",
-            "ОТП Банк. Работа с клиентами",
-            "Облачные, инфраструктурные сервисы и Яндекс 360",
-            "Островок.Ostrovok!Tech",
-            "Островок.Маркетинг",
-            "ПАО БАНК УРАЛСИБ",
-            "ПАО Банк ПСБ, Бизнес и инфраструктура",
-            "ПАО Банк Санкт-Петербург",
-            "ПАО ВТБ, Подразделения Поддержки и Контроля",
-            "ПАО ВТБ, Технологический блок",
-            "ПАО МегаФон, IT",
-            "ПАО Ростелеком",
-            "ПАО Совкомбанк",
-            "Первый ОФД",
-            "Платформа ОФД",
-            "Правила Мебели",
-            "Правительство Москвы",
-            "РОСКОСМОС",
-            "РУСАЛ",
-            "Росгосстрах",
-            "Сloud.ru: Разработка",
-            "СБЕРКОРУС",
-            "СИНТЕЗ ВОСТОК",
-            "Сахалин - Остров Возможностей",
-            "Сбер для экспертов",
             "Сбер. Data Science",
             "Сбер. IT",
             "Сбер. Кибербезопасность",
-            "Сбер. Начало карьеры",
-            "СберЗдоровье",
-            "Сибур",
-            "Сибур. Cибур Диджитал",
-            "Студия Кефир",
-            "Суточно.ру",
-            "Т-Банк. ИТ. Аналитика",
-            "ТМК++",
-            "Тануки, японский ресторан",
-            "ТехВилл",
-            "Точка Банк",
-            "Университет ИТМО",
-            "ФГАОУ ВО МГТУ им. Н.Э. Баумана",
-            "ФГБОУ ДПО РАКО АПК",
-            "ФКУ ГОСУДАРСТВЕННЫЕ ТЕХНОЛОГИИ",
-            "Федеральное автономное учреждение «Национальный институт аккредитации» (ФАУ НИА)",
-            "Центральный банк Российской Федерации (Банк России)",
-            "Циан",
-            "Чернышов Григорий Васильевич",
-            "Электронная торговая площадка Газпромбанка",
-            "Эмбедика",
-            "Эталон-Тех",
-            "Яков и Партнёры",
-            "Яндекс",
-            "Яндекс Путешествия",
-            "крупный игровой холдинг"
+            "Сбер. Начало карьеры"
           ]
         },
         "datasource": {
@@ -1475,6 +1043,6 @@
   "timezone": "browser",
   "title": "hh.ru analysis",
   "uid": "adwtmm7",
-  "version": 16,
+  "version": 18,
   "weekStart": ""
 }
