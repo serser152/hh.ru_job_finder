@@ -1,3 +1,5 @@
 *pycache*
 .env
+.idea
+tmp
 
