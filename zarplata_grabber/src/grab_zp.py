@@ -43,6 +43,7 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
 
+    options.page_load_strategy = 'eager'
     #driver = selenium.webdriver.Chrome(options=options)
     driver = selenium.webdriver.Firefox(options=options)
 
@@ -104,7 +105,7 @@ def find_by_qa2(txt):
 
 def parse_card(r):
     ''' parse job card. Click and parse details'''
-    title = r.find_element(By.TAG_NAME,'h2').text
+    title = r.find_element(By.CSS_SELECTOR,'[data-qa="serp-item__title-text"]').text
     res=r.find_elements(By.TAG_NAME,'div')
     for t in res:
         if t.get_attribute('class').startswith('vacancy-card--'):
@@ -166,7 +167,7 @@ def get_description(vac_id):
     '''parse vacancy details description page'''
 
     driver.get(f'https://zarplata.ru/vacancy/{vac_id}')
-    sleep(1)
+    sleep(3)
     d = {
         'vac_id': vac_id,
         'vac_title': find_by_qa2('vacancy-title'),

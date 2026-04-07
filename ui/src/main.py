@@ -18,7 +18,6 @@ def display_data_tab():
     st.markdown('## Assistant for job search')
 
     data = get_last_data()
-    #data['link'] = data['vac_id'].apply(lambda x: f'https://hh.ru/vacancy/{x}')
     columns = data.columns
     view_cols = st.multiselect('Columns', columns)
     st.dataframe(data[view_cols],
@@ -30,52 +29,32 @@ def display_data_tab():
                  )
 
 
-def display_settings_tab(grabber_result_id, grabber_status):
+def display_settings_tab():
     '''
         Display settings tab
     '''
     with st.spinner("Loading..."):
         df = get_active_searches()
     i = app.control.inspect()
-    scheduled = [k for k in i.scheduled().values()][0]
-    active = [k for k in i.active().values()][0]
-    reserved = [k for k in i.reserved().values()][0]
 
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
-
-    if len(active)>0:
-        grabber_result_id = active[0]
-    elif len(scheduled)>0:
-        grabber_result_id = scheduled[0]
-    if grabber_result_id:
-        res = app.AsyncResult(grabber_result_id)
-
-        st.write(res.state)
-        # if done
-        if res.state=='SUCCESS':
-            st.session_state['get_vacancies_status'] = 'Vacancy last manually update: '+str(datetime.datetime.now())
-            st.session_state['result_id'] = None
-            res.get()
-        # if task in progress or waiting
-        elif res.state in ('PROGRESS','PENDING', 'STARTED', 'RETRY'):
-            if res.state in ('PROGRESS',):
-                st.progress(res.info.get('done', 0))
-
-            if st.button('⏹️  stop grabber'):
-                res = app.AsyncResult(grabber_result_id)
-                res.revoke(terminate=True)
-                res.forget()
-                st.session_state['result_id'] = None
-        #some error
-        else:
-            st.session_state['result_id'] = None
-            st.markdown('# **Error grabbing vacancies**')
+    if len(i.active().keys()) > 0:
+        jobs = []
+        for worker in i.active().keys():
+            tasks = i.active()[worker]
+            jobs += [{'id':task['id'],'name':task['name']} for task in tasks]
     else:
-        if st.button('▶️  Get vacancies'):
-            result = grab.delay(edited_df.to_json(orient='records'))
-            st.session_state.result_id = result.id
-
+        jobs = []
+    st.write('Active tasks:')
+    for j in jobs:
+        st.write(j['id'], j['name'])
+    if st.button('▶️  Get vacancies'):
+        grab.delay(edited_df.to_json(orient='records'))
+    if st.button('▶️  Get descriptions'):
+        grab_description.delay(edited_df.to_json(orient='records'))
+    if st.button('▶️  Test job'):
+        grab2.delay(edited_df.to_json(orient='records'))
     # print last update time
     if st.session_state.get('get_vacancies_status'):
         st.write(st.session_state.get('get_vacancies_status'))
@@ -105,9 +84,6 @@ def display_count_by_tab():
 
 st.title('Job finder')
 
-grabber_result_id = st.session_state.get('result_id',None)
-grabber_status = st.session_state.get('get_vacancies_status',None)
-
 tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
 
 # MAIN WINDOW
@@ -118,8 +94,5 @@ with tab_count_by:
     display_count_by_tab()
 
 with tab_settings:
-    display_settings_tab(grabber_result_id, grabber_status)
-
-time.sleep(60)
-st.rerun()
+    display_settings_tab()
 

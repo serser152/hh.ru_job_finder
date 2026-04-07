@@ -42,11 +42,12 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
-
+    options.page_load_strategy = 'eager'
     #driver = selenium.webdriver.Chrome(options=options)
     driver = selenium.webdriver.Firefox(options=options)
 
     driver.get('https://nn.hh.ru')
+    sleep(3)
 
     #accept cookie and accept NN
     find_n_click('Понятно')
@@ -57,7 +58,7 @@ def login(phone='9200123456', password='123456'):
 
     # enter via password
     find_n_click('Войти')
-
+    sleep(2)
     # enter phone
     res= driver.find_elements(By.TAG_NAME,'input')
     res[4].send_keys(phone)
@@ -65,7 +66,7 @@ def login(phone='9200123456', password='123456'):
 
 
     find_n_click('Войти с паролем')
-
+    sleep(2)
     #enter pass
     res= driver.find_elements(By.TAG_NAME,'input')
     res[1].send_keys(password)
@@ -104,7 +105,7 @@ def find_by_qa2(txt):
 
 def parse_card(r):
     ''' parse job card. Click and parse details'''
-    title = r.find_element(By.TAG_NAME,'h2').text
+    title = r.find_element(By.CSS_SELECTOR,'[data-qa="serp-item__title-text"]').text
     res=r.find_elements(By.TAG_NAME,'div')
     for t in res:
         if t.get_attribute('class').startswith('vacancy-card--'):
@@ -155,10 +156,8 @@ def parse_page(n=1, skip_click=False):
         for p in pages:
             if p.text == str(n):
                 break
-        #sleep(1)
         p.click()
-        #driver.execute_script("arguments[0].click();", p)
-        sleep(2)
+        sleep(3)
     parse_page_content()
 
 
@@ -166,7 +165,7 @@ def get_description(vac_id):
     '''parse vacancy details description page'''
 
     driver.get(f'https://hh.ru/vacancy/{vac_id}')
-    sleep(1)
+    sleep(3)
     d = {
         'vac_id': vac_id,
         'vac_title': find_by_qa2('vacancy-title'),
@@ -185,6 +184,7 @@ def get_descriptions_by_ids(vac_ids):
     '''get vacancy details for all vacancy ids'''
     descrs=[]
     for i in tqdm(vac_ids):
+        print(f'Loading description for vacancy {i}')
         descrs.append(get_description(i))
     return descrs
 
@@ -219,7 +219,7 @@ def click_by_id(vac_id):
     vid - vacancy id
     '''
     driver.get(f'https://hh.ru/vacancy/{vac_id}')
-    sleep(1)
+    sleep(2)
 
     r = find_by_qa2('vacancy-response-link-top')
     r.click()
@@ -261,7 +261,6 @@ def process_results(data, req='ds'):
 
 
 def save2pg(pg_connection,data):
-    #con='postgresql://postgres:postgres@localhost:5433/public'
     df3.to_sql(f'hh_{req}', pg_connection, if_exists='append', index=False)
 
 #########################
@@ -287,14 +286,14 @@ def get_descriptions(phone, password, vacancy_ids):
     ''' get vacancy details for all vacancy ids'''
     try:
         login(phone, password)
-        res = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
-        res['site']='hh.ru'
+        df = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
+        df['site']='hh.ru'
         driver.quit()
     except Exception as e:
         print(e)
         driver.quit()
-        res = None
-    return res
+        df = None
+    return df
 
 def accept_vacancy(phone, password, vacancy_ids):
     ''' click reply vacancy by vacancy id and request'''
