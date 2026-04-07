@@ -8,11 +8,23 @@ from os import environ
 from time import sleep
 
 from dotenv import load_dotenv, find_dotenv
+from openai import RateLimitError
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
-desc = """
+
+class UnknownModelException(Exception):
+    """
+    Unknown model configured for description parsing
+    """
+    def __init__(self,msg):
+        self.msg = msg
+        super().__init__(msg)
+
+
+
+DESC = """
 Наша исследовательская AI-команда развивает Copilot сотрудника банка – виртуального ассистента, который участвует в диалоге с клиентом. Сейчас Copilot работает у каждого сотрудника отделения: подсказывает, ищет и исправляет ошибки, помогает вести диалог. Вашей задачей будет расширение функционала и улучшение качества работы ассистента, разработка новых продуктов и тестирование перспективных гипотез.
 Обязанности
 Вам предстоит:
@@ -38,7 +50,7 @@ desc = """
 Бесплатная подписка СберПрайм+, многочисленные скидки и бонусы от партнеров: СберМаркет, МегаМаркет, Самокат, Еаптека и др.;
 Корпоративная пенсионная программа"""
 
-system_prompt = """
+SYS_PROMPT = """
 Например:
 Работать с современными LLM в бизнес‑контексте (agents, prompt‑engineering, tools, structured output, fine‑tuning)
 
@@ -73,12 +85,14 @@ def parse_desc(desc: str) -> str:
                      base_url=ollama_url)
     else:
         print('Unknown llm type')
-        raise Exception('Unknown llm type')
+        raise UnknownModelException('Unknown llm type')
 
 
     prompt = [
-        SystemMessage(content="Ты - hr-специалист. Ты должен анализировать вакансии и резюме. Выделять ключевые навыки. Писать на русском языке."+system_prompt),
-        HumanMessage(content="Описание вакансии: " + desc + ". Выпиши ключевые навыки по одному в строке?")]
+        SystemMessage(content="Ты - hr-специалист. Ты должен анализировать вакансии и резюме."
+            "Выделять ключевые навыки. Писать на русском языке." + SYS_PROMPT),
+        HumanMessage(content="Описание вакансии: " + desc + \
+        ". Выпиши ключевые навыки по одному в строке?")]
 
     try_cnt = 5
     while try_cnt > 0:
@@ -86,10 +100,9 @@ def parse_desc(desc: str) -> str:
             res = llm.invoke(prompt)
             print(res.content)
             return res.content
-        except Exception as e:
-            print(e)
+        except RateLimitError:
             try_cnt -= 1
             sleep(10)
     return ""
 
-print(parse_desc(desc))
+print(parse_desc(DESC))

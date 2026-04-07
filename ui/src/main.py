@@ -4,11 +4,11 @@
 User interface module
 """
 
-import time
-import datetime
 import streamlit as st
 from tasks import (
     grab,
+    grab2,
+    grab_description,
     get_last_data,
     get_empty_descriptions_data,
     del_last_data,
@@ -123,4 +123,3 @@ with tab_count_by:
 
 with tab_settings:
     display_settings_tab()
-

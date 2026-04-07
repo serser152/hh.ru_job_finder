@@ -8,6 +8,7 @@ import psycopg2
 import pandas as pd
 import requests
 from celery import Celery
+import sqlalchemy
 
 
 class ScrapingException(Exception):
@@ -67,7 +68,8 @@ def init_db():
     """init db"""
     conn = psycopg2.connect(CON)
     cur = conn.cursor()
-    sql = open('db_dump.sql').read()
+    with open('db_dump.sql',encoding='utf-8') as f:
+        sql = f.read()
     cur.execute(sql)
     conn.commit()
     conn.close()
@@ -77,14 +79,19 @@ def check_db():
     '''check database and initialize if required'''
     try:
         get_active_searches()
-    except:
+    except sqlalchemy.exc.NoSuchTableError:
         init_db()
 
 
 def grab_hh_new_vac_desc(phone, password):
-    # grab new vac_ids
+    """
+    grab new vacancies description
+    """
     phone = str(phone)
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values where vac_id not in (select vac_id from vacancy_descriptions)''', con=con)
+    df2 = pd.read_sql('''
+    select vac_id from hh_ds_last_values 
+    where vac_id not in (select vac_id from vacancy_descriptions)''',
+    con=CON)
 
     vac_ids = df2.vac_id.to_list()
     jsn={
@@ -93,24 +100,24 @@ def grab_hh_new_vac_desc(phone, password):
         "vacancy_ids": vac_ids
     }
     res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
-                    json=jsn)
+                    json=jsn, timeout=2400)
 
     max_try = 5
     while not res.ok:
         if max_try == 0:
-            raise Exception('Request vac desriptions: API max retries reached')
+            raise ScrapingException('Request vac desriptions: API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
         res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
-                        json=jsn)
+                        json=jsn, timeout=2400)
         max_try -= 1
 
 
     d=res.json()
     df = pd.DataFrame(json.loads(d))
 
-    df.to_sql('vacancy_descriptions',con=con, if_exists='append', index=False)
+    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 
 def grab_hh(phone, password, request):
@@ -151,12 +158,14 @@ def grab_hh(phone, password, request):
 
 
 def grab_zp_new_vac_desc(phone, password):
-
+    """
+    grab zarplata.ru new vacancies description
+    """
     phone = str(phone)
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values 
+    df2 = pd.read_sql('''select vac_id from hh_ds_last_values
     where vac_id not in (select vac_id from vacancy_descriptions where site = 'zarplata.ru')
     and site = 'zarplata.ru' 
-    ''', con=con)
+    ''', con=CON)
 
     vac_ids = df2.vac_id.to_list()
 
@@ -188,38 +197,40 @@ def grab_zp_new_vac_desc(phone, password):
     df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
 
 def grab_zp(phone, password, request):
+    """
+    grab zarplata.ru vacancies
+    """
     phone=str(phone)
-    con = 'postgresql://postgres:postgres@postgres:5432/public'
-    res = requests.post('http://zarplata_grabber:8000/find_vacancies', 
+    res = requests.post('http://zarplata_grabber:8000/find_vacancies',
                         json={
                           "phone": phone,
 
                             "password": password,
                           "request": request
-                        })
+                        }, timeout=2400)
 
     max_try = 5
 
     while not res.ok:
         if max_try == 0:
-            raise Exception('API max retries reached')
+            raise ScrapingException('API max retries reached')
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://zarplata_grabber:8000/find_vacancies', 
+        res = requests.post('http://zarplata_grabber:8000/find_vacancies',
                         json={
                           "phone": phone,
 
                             "password": password,
                           "request": request
-                        })
+                        }, timeout=2400)
         max_try -= 1
 
     d=res.json()
     df = pd.DataFrame(json.loads(d))
     df['dt']=pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds',con=con, if_exists='append',index=False)
+    df.to_sql('hh_ds',con=CON, if_exists='append',index=False)
 
     grab_zp_new_vac_desc(phone, password)
 
@@ -303,5 +314,3 @@ def process_description(self,df):
         self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})
 
     return 'DONE'
-
-
