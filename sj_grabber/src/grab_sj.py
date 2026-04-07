@@ -32,8 +32,8 @@ def find_n_click(txt):
             break
 
 def login(phone='9200123456', password='123456'):
-    '''login to zarplata.ru using phone and password'''
-    print('Login to zarplata.ru')
+    '''login to hh.ru using phone and password'''
+    print('Login to hh')
 
     global driver
     options = Options()
@@ -43,17 +43,16 @@ def login(phone='9200123456', password='123456'):
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
 
-    options.page_load_strategy = 'eager'
     #driver = selenium.webdriver.Chrome(options=options)
     driver = selenium.webdriver.Firefox(options=options)
 
-    driver.get('https://nn.zarplata.ru')
+    driver.get('https://nn.hh.ru')
 
     #accept cookie and accept NN
     find_n_click('Понятно')
-    #find_n_click('Да, верно')
+    find_n_click('Да, верно')
 
-    driver.get('https://nn.zarplata.ru/account/login?role=applicant&backurl=%2F&hhtmFrom=main')
+    driver.get('https://nn.hh.ru/account/login?role=applicant&backurl=%2F&hhtmFrom=main')
     sleep(2)
 
     # enter via password
@@ -105,7 +104,7 @@ def find_by_qa2(txt):
 
 def parse_card(r):
     ''' parse job card. Click and parse details'''
-    title = r.find_element(By.CSS_SELECTOR,'[data-qa="serp-item__title-text"]').text
+    title = r.find_element(By.TAG_NAME,'h2').text
     res=r.find_elements(By.TAG_NAME,'div')
     for t in res:
         if t.get_attribute('class').startswith('vacancy-card--'):
@@ -122,7 +121,6 @@ def parse_card(r):
         'tags': tags,
         'company': company,
         'status': status,
-        'link': f'https://zarplata.ru/vacancy/{vac_id}'
     }
     sleep(1)
     return d
@@ -166,8 +164,8 @@ def parse_page(n=1, skip_click=False):
 def get_description(vac_id):
     '''parse vacancy details description page'''
 
-    driver.get(f'https://zarplata.ru/vacancy/{vac_id}')
-    sleep(3)
+    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    sleep(1)
     d = {
         'vac_id': vac_id,
         'vac_title': find_by_qa2('vacancy-title'),
@@ -219,7 +217,7 @@ def click_by_id(vac_id):
     click to respond on a vacancy.
     vid - vacancy id
     '''
-    driver.get(f'https://zarplata.ru/vacancy/{vac_id}')
+    driver.get(f'https://hh.ru/vacancy/{vac_id}')
     sleep(1)
 
     r = find_by_qa2('vacancy-response-link-top')
@@ -257,7 +255,7 @@ def process_results(data, req='ds'):
 
     df2=df.apply(parse_tags,axis=1)
     df2.drop(columns=['tags'], inplace=True)
-    df2['site']='zarplata.ru'
+    df2['site']='hh.ru'
     return df2
 
 
@@ -289,7 +287,7 @@ def get_descriptions(phone, password, vacancy_ids):
     try:
         login(phone, password)
         res = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
-        res['site']='zarplata.ru'
+        res['site']='hh.ru'
         driver.quit()
     except Exception as e:
         print(e)
@@ -306,4 +304,5 @@ def accept_vacancy(phone, password, vacancy_ids):
     except Exception as e:
         print(e)
     driver.quit()
+
 

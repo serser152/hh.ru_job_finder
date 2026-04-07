@@ -63,7 +63,6 @@ def parse_desc(desc: str) -> str:
     llm_type = environ.get("LLM_TYPE","OpenRouter")
     llm_name = environ.get("LLM_NAME","gpt-oss-20b:free")
     ollama_url = environ.get("OLLAMA_URL","http://192.168.31.166:11434")
-    print(f'or key="{api_key}"')
 
     if llm_type.lower() == 'openrouter':
         llm = ChatOpenAI(model=llm_name,
