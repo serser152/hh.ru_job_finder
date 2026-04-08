@@ -15,16 +15,13 @@ from tqdm import tqdm
 import selenium.webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 #######################################
 #           Login utils               #
 #######################################
 
-driver = None
-data = []
-
-
-def find_n_click(txt):
+def find_n_click(driver, txt):
     '''Find the button with text txt and click on it'''
     res = driver.find_elements(By.TAG_NAME, 'button')
 
@@ -35,41 +32,41 @@ def find_n_click(txt):
             break
 
 
-def login(phone='9200123456', password='123456'):
+def login(phone='9200123456', password='123456', eager=True):
     '''login to hh.ru using phone and password'''
     print('Login to hh')
 
-    global driver
     options = Options()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--headless')
     options.add_argument('--start-maximized')
-    options.page_load_strategy = 'eager'
-    #driver = selenium.webdriver.Chrome(options=options)
+    if eager:
+        options.page_load_strategy = 'eager'
+
     driver = selenium.webdriver.Firefox(options=options)
 
     driver.set_page_load_timeout(20)
     driver.get('https://nn.hh.ru')
     sleep(3)
 
-    # accept cookie and accept NN
-    find_n_click('Понятно')
-    find_n_click('Да, верно')
+    # accept cookie and accept city
+    find_n_click(driver, 'Понятно')
+    find_n_click(driver, 'Да, верно')
 
     driver.get('https://nn.hh.ru/account/login?role=applicant&backurl=%2F&hhtmFrom=main')
     sleep(2)
 
     # enter via password
-    find_n_click('Войти')
+    find_n_click(driver, 'Войти')
     sleep(2)
     # enter phone
     res = driver.find_elements(By.TAG_NAME, 'input')
     res[4].send_keys(phone)
     sleep(1)
 
-    find_n_click('Войти с паролем')
+    find_n_click(driver, 'Войти с паролем')
     sleep(2)
     #enter pass
     res= driver.find_elements(By.TAG_NAME,'input')
@@ -77,34 +74,38 @@ def login(phone='9200123456', password='123456'):
     driver.implicitly_wait(10)
     sleep(1)
 
-    find_n_click('Войти')
+    find_n_click(driver, 'Войти')
     sleep(3)
+    return driver
 
-
-def send_find_request(txt):
+def send_find_request(driver, txt):
     '''Send find request'''
     res = driver.find_elements(By.TAG_NAME, 'input')
     for r in res:
         if r.get_attribute('data-qa') == 'search-input':
             r.send_keys(txt)
             break
-    find_n_click('Найти')
+    find_n_click(driver, 'Найти')
 
 ########################################
 # # parsing functions                 #
 #######################################
 
 
-def find_by_qa(qa_txt):
+def find_by_qa(driver, qa_txt):
     '''find element by qa attribute'''
     return driver.find_elements(By.CSS_SELECTOR, f'[data-qa="{qa_txt}"]')
 
 
-def find_by_qa2(txt):
+def find_by_qa2(driver, txt):
     '''find element by qa attribute'''
     try:
-        return find_by_qa(txt)[0].text
-    except Exception:
+        elems = find_by_qa(driver, txt)
+        if len(elems) > 0:
+            return elems[0].text
+        print('no elements found')
+        return None
+    except NoSuchElementException:
         return None
 
 
@@ -139,26 +140,28 @@ def parse_card(r):
     return d
 
 
-def get_last_page():
+def get_last_page(driver):
     '''get the last page number of search results'''
     try:
         ii = driver.find_element(By.TAG_NAME, 'nav').find_elements(By.TAG_NAME, 'li')
         pages = [iii.text for iii in ii]
         last_page = int(pages[-2])
         return last_page + 1
-    except Exception:
+    except NoSuchElementException:
         return 1
 
 
-def parse_page_content():
+def parse_page_content(driver):
     '''parsing vacancy card from search results'''
-    res = find_by_qa("vacancy-serp__vacancy")
+    res = find_by_qa(driver, "vacancy-serp__vacancy")
     print(f'found {len(res)} div tags')
+    new_data = []
     for r in tqdm(res):
-        data.append(parse_card(r))
+        new_data.append(parse_card(r))
+    return new_data
 
 
-def parse_page(n=1, skip_click=False):
+def parse_page(driver, n=1, skip_click=False):
     '''Parsing page of search results'''
     if not skip_click:
         ii = driver.find_element(By.TAG_NAME, 'nav').find_elements(By.TAG_NAME, 'li')
@@ -169,50 +172,51 @@ def parse_page(n=1, skip_click=False):
                 break
         p.click()
         sleep(3)
-    parse_page_content()
+    new_data = parse_page_content(driver)
+    return new_data
 
 
-def get_description(vac_id):
+def get_description(driver, vac_id):
     '''parse vacancy details description page'''
-
-    driver.get(f'https://hh.ru/vacancy/{vac_id}')
+    print(f'loadin vacancy {vac_id}')
+    driver.get(f'https://nn.hh.ru/vacancy/{vac_id}')
     sleep(3)
     d = {
         'vac_id': vac_id,
-        'vac_title': find_by_qa2('vacancy-title'),
-        'vac_salary': find_by_qa2('vacancy-salary'),
-        'vac_exp': find_by_qa2('work-expirience-text'),
-        'vac_emp': find_by_qa2('common-employment-text'),
-        'vac_hiring_format': find_by_qa2('vacancy-hiring-format'),
-        'vac_working_hours': find_by_qa2('working-hours-text'),
-        'vac_work_format': find_by_qa2('work-formats-text'),
-        'vac_descr': find_by_qa2('vacancy-description')
+        'vac_title': find_by_qa2(driver, 'vacancy-title'),
+        'vac_salary': find_by_qa2(driver, 'vacancy-salary'),
+        'vac_exp': find_by_qa2(driver, 'work-expirience-text'),
+        'vac_emp': find_by_qa2(driver, 'common-employment-text'),
+        'vac_hiring_format': find_by_qa2(driver, 'vacancy-hiring-format'),
+        'vac_working_hours': find_by_qa2(driver, 'working-hours-text'),
+        'vac_work_format': find_by_qa2(driver, 'work-formats-text'),
+        'vac_descr': find_by_qa2(driver, 'vacancy-description')
     }
-
+    print(d)
     return d
 
 
-def get_descriptions_by_ids(vac_ids):
+def get_descriptions_by_ids(driver, vac_ids):
     '''get vacancy details for all vacancy ids'''
     descrs = []
     for i in tqdm(vac_ids):
         print(f'Loading description for vacancy {i}')
-        descrs.append(get_description(i))
+        descrs.append(get_description(driver, i))
     return descrs
 
 
-def grep_results():
+def grep_results(driver):
     '''parsing all search results (all pages, all cards)'''
-    global data
 
     print('Grep results')
     driver.switch_to.window(driver.window_handles[0])
 
     data = []
-    last_page = get_last_page()
+    last_page = get_last_page(driver)
     print(f'total {last_page} pages')
     for i in tqdm(range(0, last_page)):
-        parse_page(i + 1, last_page == 1)
+        new_data = parse_page(driver, i + 1, last_page == 1)
+        data += new_data
     return data
 
 
@@ -220,7 +224,7 @@ def grep_results():
 # respond to vacancy    #
 ##########################
 
-def click_by_id(vac_id):
+def click_by_id(driver, vac_id):
     '''
     click to respond on a vacancy.
     vid - vacancy id
@@ -228,7 +232,7 @@ def click_by_id(vac_id):
     driver.get(f'https://hh.ru/vacancy/{vac_id}')
     sleep(2)
 
-    r = find_by_qa2('vacancy-response-link-top')
+    r = find_by_qa2(driver, 'vacancy-response-link-top')
     r.click()
     sleep(2)
 
@@ -275,12 +279,12 @@ def process_results(data_res):
 def get_vacancies(phone, password, request):
     ''' get vacancies for request'''
     try:
-        login(phone, password)
-        send_find_request(request)
-        data_res = grep_results()
+        driver = login(phone, password)
+        send_find_request(driver, request)
+        data_res = grep_results(driver)
         df = process_results(data_res)
         driver.quit()
-    except Exception as e:
+    except NoSuchElementException as e:
         print(e)
         driver.quit()
         df = None
@@ -290,11 +294,11 @@ def get_vacancies(phone, password, request):
 def get_descriptions(phone, password, vacancy_ids):
     ''' get vacancy details for all vacancy ids'''
     try:
-        login(phone, password)
-        df = pd.DataFrame(get_descriptions_by_ids(vacancy_ids))
+        driver = login(phone, password)
+        df = pd.DataFrame(get_descriptions_by_ids(driver, vacancy_ids))
         df['site']='hh.ru'
         driver.quit()
-    except Exception as e:
+    except NoSuchElementException as e:
         print(e)
         driver.quit()
         df = None
@@ -304,9 +308,9 @@ def get_descriptions(phone, password, vacancy_ids):
 def accept_vacancy(phone, password, vacancy_ids):
     ''' click reply vacancy by vacancy id and request'''
     try:
-        login(phone, password)
+        driver = login(phone, password)
         for vacancy_id in vacancy_ids:
-            click_by_id(vacancy_id)
-    except Exception as e:
+            click_by_id(driver, vacancy_id)
+    except NoSuchElementException as e:
         print(e)
     driver.quit()
