@@ -12,13 +12,13 @@ services:
 #    build: scheduler
 
   assistant_ui:
-    image: assistant_ui:0.1
+    image: assistant_ui:0.3
     build: ui
     ports:
       - "8501:8501"
 
   description_analyzer:
-    image: description_analyser:0.1
+    image: description_analyser:0.3
     build: description_analyzer
     ports:
       - "8003:8000"
