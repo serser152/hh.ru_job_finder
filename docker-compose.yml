@@ -1,17 +1,11 @@
 
 services:
 
-  hh_grabber:
-    image: hh_grabber:0.3
-    build: hh_grabber
+  grabber:
+    image: grabber:0.3
+    build: grabber
     ports:
       - "8001:8000"
-
-  zarplata_grabber:
-    image: zarplata_grabber:0.1
-    build: zarplata_grabber
-    ports:
-      - "8002:8000"
 
 #  scheduler:
 #    image: scheduler:0.1
@@ -28,7 +22,6 @@ services:
     build: description_analyzer
     ports:
       - "8003:8000"
-
 
   grafana:
     image: grafana/grafana-enterprise:latest

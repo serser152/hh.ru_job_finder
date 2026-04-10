@@ -1,5 +1,0 @@
-selenium
-tqdm
-pandas
-fastapi[standard]
-pydantic
