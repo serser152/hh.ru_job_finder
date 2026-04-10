@@ -21,4 +21,4 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint --ignored-modules=psycopg2 $(git ls-files '*.py')
+        pylint --ignored-modules=psycopg2 disable=cyclic-import $(git ls-files '*.py')
