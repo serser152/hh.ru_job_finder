@@ -11,6 +11,8 @@ from celery import Celery
 import sqlalchemy
 
 
+
+
 class ScrapingException(Exception):
     """ Scraping exception"""
     def __init__(self, msg):
@@ -19,6 +21,9 @@ class ScrapingException(Exception):
 
 
 CON = 'postgresql://postgres:postgres@postgres:5432/public'
+MAX_RETRY = 0
+
+
 app = Celery('tasks',
     backend='redis://redis:6379/0',
     broker='amqp://admin:secure_password@rabbitmq//')
@@ -40,12 +45,13 @@ def update_db_df(edited_df):
 
 def get_last_data():
     """get last data """
-    df2 = pd.read_sql('''select * from hh_ds_last_values''', con=CON)
+    df2 = pd.read_sql('''select h1.link, h2.* from vacancies_last_values h1
+    join vacancy_descriptions h2 on h1.vac_id = h2.vac_id and h1.site = h2.site''', con=CON)
     return df2
 
 def get_empty_descriptions_data():
     """get last data without parsed skills"""
-    df2 = pd.read_sql('''select h2.* from hh_ds_last_values h1
+    df2 = pd.read_sql('''select h2.* from vacancies_last_values h1
 join vacancy_descriptions h2 on h1.vac_id = h2.vac_id
 where h2.vac_id not in (select distinct vac_id from vacancy_skills)
 and h2.vac_descr is not null
@@ -57,9 +63,9 @@ def del_last_data():
     conn = psycopg2.connect(CON)
     cur = conn.cursor()
     cur.execute('''
-    delete from hh_ds
+    delete from vacancies
      WHERE dt = (( SELECT max(hd.dt) AS max
-           FROM hh_ds hd));''')
+           FROM vacancies hd));''')
     conn.commit()
     conn.close()
 
@@ -81,58 +87,76 @@ def check_db():
         get_active_searches()
     except sqlalchemy.exc.NoSuchTableError:
         init_db()
+    except psycopg2.errors.UndefinedTable:
+        init_db()
+    except pd.errors.DatabaseError:
+        init_db()
 
 
-def grab_hh_new_vac_desc(phone, password):
+def grab_new_vac_desc(site, phone, password, s = None):
     """
     grab new vacancies description
     """
+    print(f'Get new vac description for {site}')
     phone = str(phone)
-    df2 = pd.read_sql('''
-    select vac_id from hh_ds_last_values 
-    where vac_id not in (select vac_id from vacancy_descriptions)''',
+    df2 = pd.read_sql(f'''
+    select vac_id from vacancies_last_values 
+    where vac_id not in (select vac_id from vacancy_descriptions where site ='{site}')
+    and site = '{site}' ''',
     con=CON)
 
     vac_ids = df2.vac_id.to_list()
-    jsn={
-        "phone": phone,
-        "password": password,
-        "vacancy_ids": vac_ids
-    }
-    res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
-                    json=jsn, timeout=2400)
+    batch_size = 20
+    steps = len(vac_ids)//batch_size
+    for i in range(steps):
+        batch = vac_ids[i*batch_size:(i+1)*batch_size]
 
-    max_try = 5
-    while not res.ok:
-        if max_try == 0:
-            raise ScrapingException('Request vac desriptions: API max retries reached')
-        #wait 1 min
-        sleep(60)
-        # request again
-        res = requests.post('http://hh_grabber:8000/get_vacancy_descriptions',
+        jsn={
+            "site": site,
+            "phone": phone,
+            "password": password,
+            "vacancy_ids": batch
+        }
+        res = requests.post('http://grabber:8000/get_vacancy_descriptions',
                         json=jsn, timeout=2400)
-        max_try -= 1
+
+        max_try = MAX_RETRY
+        while not res.ok:
+            if max_try == 0:
+                raise ScrapingException('Request vac desriptions: API max retries reached')
+            #wait 1 min
+            sleep(60)
+            # request again
+            res = requests.post('http://grabber:8000/get_vacancy_descriptions',
+                            json=jsn, timeout=2400)
+            max_try -= 1
 
 
-    d=res.json()
-    df = pd.DataFrame(json.loads(d))
+        d=res.json()
+        df = pd.DataFrame(json.loads(d))
 
-    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
+        df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
+        print(f'step {i} of {steps} done')
+        if s:
+            s.update_state(state='PROGRESS', meta={'done': int(100.0*i/steps)})
+        sleep(2)
 
-
-def grab_hh(phone, password, request):
-    """grab hh"""
+def grab_site(site, phone, password, request):
+    """grab vacancies"""
     phone = str(phone)
     print('first try')
-    print(f''' phone = "{phone}", "{password}", "{request}"''')
-    res = requests.post('http://hh_grabber:8000/find_vacancies',
-                        json={
-                          "phone": phone,
-                          "password": password,
-                          "request": request
-                        }, timeout=2400)
 
-    max_try = 5
+    jsn={
+          "site": site,
+          "phone": phone,
+          "password": password,
+          "request": request
+    }
+
+    res = requests.post('http://grabber:8000/find_vacancies',
+                    json=jsn, timeout=2400)
+
+    max_try = MAX_RETRY
 
     while not res.ok:
         if max_try == 0:
@@ -140,99 +164,17 @@ def grab_hh(phone, password, request):
         #wait 1 min
         sleep(60)
         # request again
-        res = requests.post('http://hh_grabber:8000/find_vacancies',
-                        json={
-                        "phone": phone,
-                        "password": password,
-                        "request": request
-                        }, timeout=2400)
+        res = requests.post('http://grabber:8000/find_vacancies',
+                    json=jsn, timeout=2400)
         max_try -= 1
 
     d = res.json()
     df = pd.DataFrame(json.loads(d))
     df['dt'] = pd.to_datetime(df.dt, unit='ms')
 
-    df.to_sql('hh_ds', con=CON, if_exists='append', index=False)
-    grab_hh_new_vac_desc(phone, password)
+    df.to_sql('vacancies', con=CON, if_exists='append', index=False)
+    grab_new_vac_desc(site, phone, password)
 
-
-
-def grab_zp_new_vac_desc(phone, password):
-    """
-    grab zarplata.ru new vacancies description
-    """
-    phone = str(phone)
-    df2 = pd.read_sql('''select vac_id from hh_ds_last_values
-    where vac_id not in (select vac_id from vacancy_descriptions where site = 'zarplata.ru')
-    and site = 'zarplata.ru' 
-    ''', con=CON)
-
-    vac_ids = df2.vac_id.to_list()
-
-    res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
-                    json={
-                      "phone": phone,
-                      "password": password,
-                      "vacancy_ids": vac_ids
-                    }, timeout=2400)
-
-    max_try = 5
-    while not res.ok:
-        if max_try == 0:
-            raise ScrapingException('Request vac desriptions: API max retries reached')
-        #wait 1 min
-        sleep(60)
-        # request again
-        res = requests.post('http://zarplata_grabber:8000/get_vacancy_descriptions',
-                        json={
-                          "phone": phone,
-                          "password": password,
-                          "vacancy_ids": vac_ids
-                        }, timeout=2400)
-        max_try -= 1
-
-
-    d=res.json()
-    df = pd.DataFrame(json.loads(d))
-    df.to_sql('vacancy_descriptions',con=CON, if_exists='append', index=False)
-
-def grab_zp(phone, password, request):
-    """
-    grab zarplata.ru vacancies
-    """
-    phone=str(phone)
-    res = requests.post('http://zarplata_grabber:8000/find_vacancies',
-                        json={
-                          "phone": phone,
-
-                            "password": password,
-                          "request": request
-                        }, timeout=2400)
-
-    max_try = 5
-
-    while not res.ok:
-        if max_try == 0:
-            raise ScrapingException('API max retries reached')
-        #wait 1 min
-        sleep(60)
-        # request again
-        res = requests.post('http://zarplata_grabber:8000/find_vacancies',
-                        json={
-                          "phone": phone,
-
-                            "password": password,
-                          "request": request
-                        }, timeout=2400)
-        max_try -= 1
-
-    d=res.json()
-    df = pd.DataFrame(json.loads(d))
-    df['dt']=pd.to_datetime(df.dt, unit='ms')
-
-    df.to_sql('hh_ds',con=CON, if_exists='append',index=False)
-
-    grab_zp_new_vac_desc(phone, password)
 
 @app.task(bind=True)
 def grab(self, df):
@@ -244,12 +186,8 @@ def grab(self, df):
         # check if enabled
         if not row.enabled:
             continue
-        if row.site == 'hh.ru':
-            print('grab hh', row.request)
-            grab_hh(row.phone, row.password, row.request)
-        elif row.site == 'zarplata.ru':
-            print('grab zp', row.request)
-            grab_zp(row.phone, row.password, row.request)
+        print(f'grab {row.request} {row.site}')
+        grab_site(row.site, row.phone, row.password, row.request)
 
         self.update_state(state='PROGRESS', meta={'done': 100.0*i/len(df2)})
     return 'DONE'
@@ -266,14 +204,10 @@ def grab_description(self, df):
         # check if enabled
         if not row.enabled:
             continue
-        if row.site == 'hh.ru':
-            print('grab hh new desc', row.request)
-            grab_hh_new_vac_desc(row.phone, row.password)
-        elif row.site == 'zarplata.ru':
-            print('grab zp new desc', row.request)
-            grab_zp_new_vac_desc(row.phone, row.password)
+        print(f'grab new desc {i} ', row.request)
+        grab_new_vac_desc(row.site, row.phone, row.password, self)
 
-        self.update_state(state='PROGRESS', meta={'done': int(100.0*i/len(df2))})
+        #self.update_state(state='PROGRESS', meta={'done': int(100.0*i/len(df2))})
     return 'DONE'
     #self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
 
@@ -309,7 +243,7 @@ def process_description(self,df):
         d = res.json()
         df = pd.DataFrame(json.loads(d))
         df['vac_id'] = row.vac_id
-
+        df['site'] = row.site
         df.to_sql('vacancy_skills', con=CON, if_exists='append', index=False)
         self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})
 

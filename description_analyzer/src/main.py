@@ -29,4 +29,4 @@ async def parse_description(request: ParseDescriptionRequest):
     res = parse_desc(request.desc)
     print(f'res = {res}')
     df = pd.DataFrame(res.split('\n'), columns=['skill'])
-    return df.to_json(orient='records')
+    return df.drop_duplicates().to_json(orient='records')

@@ -67,7 +67,7 @@ def display_settings_tab():
     st.write('Active tasks:')
 
     for j in jobs:
-        st.write(j['id'], j['name'],'-',j['status'],'%')
+        st.write(j['name'],'-',j['status'],'%')
 
     if st.button('▶️  Get vacancies'):
         grab.delay(edited_df.to_json(orient='records'))
@@ -78,7 +78,7 @@ def display_settings_tab():
     if st.button('▶️  parse vacancies skills'):
         with st.spinner("Loading last data..."):
             data = get_empty_descriptions_data()
-            data = data[['vac_id', 'vac_descr']]
+            data = data[['vac_id', 'site', 'vac_descr']]
         process_description.delay(data.to_json(orient='records'))
 
     # print last update time

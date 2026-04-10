@@ -112,7 +112,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "select date(dt) date, count(*) \"hh.ru vacancies\"\nfrom hh_ds \nwhere site = 'hh.ru'\ngroup by 1\norder by 1",
+          "rawSql": "select date(dt) date, count(*) \"hh.ru vacancies\"\nfrom vacancies \nwhere site = 'hh.ru'\ngroup by 1\norder by 1",
           "refId": "A",
           "sql": {
             "columns": [
@@ -141,7 +141,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "select date(dt) date, count(*) \"zarplata.ru vacancies\"\nfrom hh_ds \nwhere site = 'zarplata.ru'\ngroup by 1\norder by 1",
+          "rawSql": "select date(dt) date, count(*) \"zarplata.ru vacancies\"\nfrom vacancies \nwhere site = 'zarplata.ru'\ngroup by 1\norder by 1",
           "refId": "B",
           "sql": {
             "columns": [
@@ -411,7 +411,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from hh_ds order by 1),\ncte2 as (\n  SELECT hh_ds.dt::date, COUNT(*) AS \"error count\" \n  FROM hh_ds \n  left join vacancy_descriptions vd on hh_ds.vac_id = vd.vac_id\n  WHERE vd.vac_id IS NULL \n  GROUP BY dt \n)\nselect cte1.*,coalesce(cte2.\"error count\",0)\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
+          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from vacancies order by 1),\ncte2 as (\n  SELECT vacancies.dt::date, COUNT(*) AS \"error count\" \n  FROM vacancies \n  left join vacancy_descriptions vd on vacancies.vac_id = vd.vac_id\n  WHERE vd.vac_id IS NULL \n  GROUP BY dt \n)\nselect cte1.*,coalesce(cte2.\"error count\",0)\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -466,7 +466,7 @@
             },
             "whereString": "vac_descr IS NULL"
           },
-          "table": "hh_ds"
+          "table": "vacancies"
         }
       ],
       "title": "Error rate",
@@ -560,7 +560,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from hh_ds order by 1),\ncte2 as (\n  SELECT hh_ds.dt::date, COUNT(*) AS \"error count\" \n  FROM hh_ds \n  WHERE hh_ds.vac_id not in (select distinct vac_id from vacancy_skills)\n  GROUP BY 1\n)\nselect cte1.*,coalesce(cte2.\"error count\",0) \"not parsed vacancies\"\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
+          "rawSql": "with cte1 as (\n  select distinct dt::date\n  from vacancies order by 1),\ncte2 as (\n  SELECT vacancies.dt::date, COUNT(*) AS \"error count\" \n  FROM vacancies \n  WHERE vacancies.vac_id not in (select distinct vac_id from vacancy_skills)\n  GROUP BY 1\n)\nselect cte1.*,coalesce(cte2.\"error count\",0) \"not parsed vacancies\"\nfrom cte1\nleft join cte2 on cte1.dt = cte2.dt\n\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -599,6 +599,6 @@
   "timezone": "browser",
   "title": "hh.ru monitor",
   "uid": "advvv9z",
-  "version": 12,
+  "version": 2,
   "weekStart": ""
 }
