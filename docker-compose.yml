@@ -7,10 +7,6 @@ services:
     ports:
       - "8001:8000"
 
-#  scheduler:
-#    image: scheduler:0.1
-#    build: scheduler
-
   assistant_ui:
     image: assistant_ui:0.3
     build: ui

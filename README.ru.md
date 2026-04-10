@@ -45,7 +45,6 @@ docker-compose up -d
 - postgresql
 - grafana
 - hh_grubber (selenium)
-- scheduller (apscheduler)
 - gui (streamlit + celery)
 - redis (for celery)
 - rabbitmq (for celery)

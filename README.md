@@ -45,7 +45,6 @@ Service implemented via docker containers. There are following containers:
 - postgresql
 - grafana
 - hh_grubber (selenium)
-- scheduller (apscheduler)
 - gui (streamlit + celery)
 - redis (for celery)
 - rabbitmq (for celery)
