@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Шаблон для задач celery"""
+"""Utils and tasks for celery"""
 import json
 from time import sleep
 from io import StringIO
