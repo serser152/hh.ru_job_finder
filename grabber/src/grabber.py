@@ -345,7 +345,7 @@ class ZPGrabber(HHGrabber):
             d['vac_work_format'] = d['vac_work_format'].replace('Формат работы: ','')
 
         # check if scrapping failed
-        if d['vac_title'] == None:
+        if d['vac_title'] is None:
             raise GrabberException()
 
         print(d)
