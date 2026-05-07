@@ -34,8 +34,7 @@ def display_data_tab():
     st.markdown('## Assistant for job search')
 
     with st.spinner("Loading last data..."):
-        resume_id = st.session_state.get('resume_id', None)
-        data = get_last_data_with_metric(resume_id=resume_id)
+        data = get_last_data_with_metric(resume_id=st.session_state.get('resume_id', None))
         columns = data.columns
         view_cols = st.multiselect('Columns', columns)
         st.dataframe(data[view_cols],
@@ -64,12 +63,12 @@ def display_cv_tab():
         else:
             resume_ids = data['resume_id']
 
-            resume_id = st.session_state.get('resume_id',None)
-            print(f'Found Resume id = {resume_id}')
+            resume_id_old = st.session_state.get('resume_id', None)
+            print(f'Found Resume id = {resume_id_old}')
 
             #find index for resume
-            if resume_id:
-                idx = data[data['resume_id'] == resume_id].index[0]
+            if resume_id_old:
+                idx = data[data['resume_id'] == resume_id_old].index[0]
             else:
                 idx = 0
             new_resume_id = st.selectbox('Select CV:', resume_ids, index=idx)
@@ -89,7 +88,6 @@ def display_cv_tab():
             # analyse button
             if st.button('Analyse CV'):
                 process_resumes.delay(data.to_json(orient='records'))
-
 
             # vacancy matching button
             if st.button('Run vacancy matching'):

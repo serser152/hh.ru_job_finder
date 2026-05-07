@@ -42,6 +42,7 @@ def get_cv_data():
     df = pd.read_sql('select * from resume',CON)
     return df
 
+
 def add_cv(txt):
     """get active searches"""
     df = pd.DataFrame([{'resume':txt}])
@@ -50,14 +51,14 @@ def add_cv(txt):
 
 def update_cv(resume_id, txt):
     """update cv"""
-    print('update cv not implemented')
+    print(f'update cv {resume_id} with "{txt[:10]}..." not implemented')
 
 
 def get_cv_skills(resume_id):
     """get cv skills searches"""
     df = pd.read_sql('select * from resume_skills',CON)
+    df = df[df.resume_id == resume_id]
     return df['skill'].tolist()
-
 
 
 def update_db_df(edited_df):
@@ -332,7 +333,12 @@ def vacancy_matching(self):
                         }, timeout=100)
         d = res.json()
         match = int(d['match'])
-        df = pd.DataFrame([{'metric': match , 'vac_id':row.vac_id, 'resume_id': row.resume_id, 'site':row.site}])
+        df = pd.DataFrame([{
+            'metric': match ,
+            'vac_id':row.vac_id,
+            'resume_id': row.resume_id,
+            'site':row.site
+        }])
         print('df=',df)
         df.to_sql('vacancy_resume_match', con=CON, if_exists='append', index=False)
         self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})

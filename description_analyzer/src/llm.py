@@ -80,14 +80,17 @@ SYS_PROMPT_MATCHER = """
 """
 
 def parse_desc(desc: str) -> str:
+    """Parse description to list of keywords"""
     return parse_skills(desc)
 
 
 def parse_resume(desc: str) -> str:
+    """Parse description to list of keywords"""
     return parse_skills(desc)
 
 
 def init_llm():
+    """Initialize LLM"""
     load_dotenv(find_dotenv())
 
     api_key = environ.get("OPENROUTER_API_KEY","")
