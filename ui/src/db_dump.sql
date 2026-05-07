@@ -53,7 +53,8 @@ create table if not exists resume_skills (
 )
 
 create table if not exists vacancy_resume_match (
-    vacancy_id int references vacancy_descriptions(vacancy_id),
+    vacancy_id varchar,
+    site varchar,
     resume_id int references resume(resume_id),
     metric float not null
 )

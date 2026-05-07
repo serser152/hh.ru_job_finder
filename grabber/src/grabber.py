@@ -264,7 +264,7 @@ class HHGrabber(Grabber):
                     if p.text == str(page):
                         break
                 p.click()
-                sleep(3)
+                sleep(4)
             vacancies = find_by_qa(self.driver, "vacancy-serp__vacancy")
             print(f'found {len(vacancies)} div tags')
             new_data = []
@@ -292,7 +292,7 @@ class HHGrabber(Grabber):
         }
         # remove prefixes
         if d['vac_exp']:
-            d['vac_exp'] = d['vac_exp'].replace('Опыт работы: ','')
+            d['vac_exp'] = d['vac_exp'].replace('Опыт работы: ','').replace('Опыт ','')
         if d['vac_hiring_format']:
             d['vac_hiring_format'] = d['vac_hiring_format'].replace('Оформление: ','')
         if d['vac_work_format']:

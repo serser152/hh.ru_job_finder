@@ -10,6 +10,10 @@ from tasks import (
     grab2,
     grab_description,
     get_last_data,
+    update_cv,
+    get_last_data_with_metric,
+    get_cv_data,
+    add_cv,
     get_empty_descriptions_data,
     del_last_data,
     update_db_df,
@@ -17,7 +21,10 @@ from tasks import (
     init_db,
     check_db,
     process_description,
-    app)
+    process_resumes,
+    vacancy_matching,
+    app, get_cv_skills)
+
 
 
 def display_data_tab():
@@ -27,7 +34,8 @@ def display_data_tab():
     st.markdown('## Assistant for job search')
 
     with st.spinner("Loading last data..."):
-        data = get_last_data()
+        resume_id = st.session_state.get('resume_id', None)
+        data = get_last_data_with_metric(resume_id=resume_id)
         columns = data.columns
         view_cols = st.multiselect('Columns', columns)
         st.dataframe(data[view_cols],
@@ -37,6 +45,63 @@ def display_data_tab():
                      ),
                  },
                  )
+
+def display_cv_tab():
+    """
+        Display cv tab
+    """
+    st.markdown('## CV')
+
+    with st.spinner("Loading last data..."):
+        data = get_cv_data()
+
+        if data.size == 0:
+            txt = st.text_area('CV text:', value='')
+            if st.button('+'):
+                add_cv(txt)
+                st.rerun()
+
+        else:
+            resume_ids = data['resume_id']
+
+            resume_id = st.session_state.get('resume_id',None)
+            print(f'Found Resume id = {resume_id}')
+
+            #find index for resume
+            if resume_id:
+                idx = data[data['resume_id'] == resume_id].index[0]
+            else:
+                idx = 0
+            new_resume_id = st.selectbox('Select CV:', resume_ids, index=idx)
+
+            txt = data[data['resume_id'] == new_resume_id]['resume'][0]
+            st.session_state['resume_id'] = new_resume_id
+
+            new_txt = st.text_area('CV:', txt)
+
+            # show list of skills
+            skills = get_cv_skills(new_resume_id)
+            # show skills list
+            if len(skills) > 0:
+                st.write('Skills:')
+                st.dataframe(skills)
+
+            # analyse button
+            if st.button('Analyse CV'):
+                process_resumes.delay(data.to_json(orient='records'))
+
+
+            # vacancy matching button
+            if st.button('Run vacancy matching'):
+                vacancy_matching.delay()
+
+            # save button
+            if st.button('✅ '):
+                update_cv(new_resume_id, new_txt)
+            # update button
+            if st.button('+'):
+                add_cv(txt)
+                st.rerun()
 
 
 def display_settings_tab():
@@ -51,6 +116,7 @@ def display_settings_tab():
     st.markdown('### Active searches')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
+    # get active jobs status
     if len(i.active().keys()) > 0:
         jobs = []
         for worker in i.active().keys():
@@ -66,6 +132,7 @@ def display_settings_tab():
 
     st.write('Active tasks:')
 
+    # display statuses
     for j in jobs:
         st.write(j['name'],'-',j['status'],'%')
 
@@ -81,9 +148,6 @@ def display_settings_tab():
             data = data[['vac_id', 'site', 'vac_descr']]
         process_description.delay(data.to_json(orient='records'))
 
-    # print last update time
-    if st.session_state.get('get_vacancies_status'):
-        st.write(st.session_state.get('get_vacancies_status'))
     if st.button('🗑️ remove last load'):
         with st.spinner('deleting in progress'):
             del_last_data()
@@ -109,9 +173,22 @@ def display_count_by_tab():
     data3 = data2.sort_values('vac_id',ascending=False).head(10)
     st.bar_chart(data3,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
 
+
+
+
+
+
 st.title('Job finder')
 
-tab_settings,tab_data, tab_count_by = st.tabs(['Settings','Data','Vacancies count by company'])
+resume_id = st.session_state.get('resume_id', 0)
+
+tab_settings,tab_data, tab_count_by, tab_cv = st.tabs([
+    'Settings',
+    'Data',
+    'Vacancies count by company',
+    'CV',
+])
+
 with st.spinner("Check db..."):
     check_db()
 # MAIN WINDOW
@@ -123,3 +200,6 @@ with tab_count_by:
 
 with tab_settings:
     display_settings_tab()
+
+with tab_cv:
+    display_cv_tab()

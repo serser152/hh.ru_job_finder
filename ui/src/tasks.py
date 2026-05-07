@@ -11,8 +11,6 @@ from celery import Celery
 import sqlalchemy
 
 
-
-
 class ScrapingException(Exception):
     """ Scraping exception"""
     def __init__(self, msg):
@@ -38,6 +36,30 @@ def get_active_searches():
     df = pd.read_sql('select * from searches',CON)
     return df
 
+
+def get_cv_data():
+    """get active searches"""
+    df = pd.read_sql('select * from resume',CON)
+    return df
+
+def add_cv(txt):
+    """get active searches"""
+    df = pd.DataFrame([{'resume':txt}])
+    df.to_sql('resume', con=CON, index=False, if_exists='append')
+
+
+def update_cv(resume_id, txt):
+    """update cv"""
+    print('update cv not implemented')
+
+
+def get_cv_skills(resume_id):
+    """get cv skills searches"""
+    df = pd.read_sql('select * from resume_skills',CON)
+    return df['skill'].tolist()
+
+
+
 def update_db_df(edited_df):
     """update db"""
     edited_df.to_sql('searches', con=CON, index=False, if_exists='replace')
@@ -45,9 +67,23 @@ def update_db_df(edited_df):
 
 def get_last_data():
     """get last data """
-    df2 = pd.read_sql('''select h1.link, h2.* from vacancies_last_values h1
-    join vacancy_descriptions h2 on h1.vac_id = h2.vac_id and h1.site = h2.site''', con=CON)
+    df2 = pd.read_sql('''select * from vacancies_last_values h1''', con=CON)
     return df2
+
+def get_last_data_with_metric(resume_id=None):
+    """get last data """
+    if resume_id:
+        df2 = pd.read_sql(f'''select h1.*, h2.metric from vacancies_last_values h1
+        left join vacancy_resume_match h2 using (vac_id,site)
+        where resume_id = {resume_id}
+        ''', con=CON)
+    else:
+        df2 = pd.read_sql('''select h1.*, h2.metric from vacancies_last_values h1
+        left join vacancy_resume_match h2 using (vac_id,site)
+        ''', con=CON)
+
+    return df2
+
 
 def get_empty_descriptions_data():
     """get last data without parsed skills"""
@@ -245,6 +281,60 @@ def process_description(self,df):
         df['vac_id'] = row.vac_id
         df['site'] = row.site
         df.to_sql('vacancy_skills', con=CON, if_exists='append', index=False)
+        self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})
+
+    return 'DONE'
+
+
+@app.task(bind=True)
+def process_resumes(self,df):
+    """parse resume task"""
+    print('Task:parsing_resume')
+    print(df)
+    df2=pd.read_json(StringIO(df))
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        print(i,row)
+        res = requests.post('http://description_analyzer:8000/parse_descriptions',
+                        json={
+                          "desc": row.resume,
+                        }, timeout=100)
+        d = res.json()
+        print(d)
+        df = pd.DataFrame(json.loads(d))
+        df['resume_id'] = row.resume_id
+        df.to_sql('resume_skills', con=CON, if_exists='append', index=False)
+        self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})
+
+    return 'DONE'
+
+
+@app.task(bind=True)
+def vacancy_matching(self):
+    """match vacancies """
+    print('Task:matching ')
+    #select only required matches
+    df2 = pd.read_sql('''
+    select h2.vac_id, h2.site, h2.vac_descr, t2.resume, t2.resume_id
+    from vacancies_last_values h1
+    join vacancy_descriptions h2 using (vac_id, site)
+    cross join resume t2
+    left join vacancy_resume_match m using (vac_id,site,resume_id)
+    where metric is Null    ''', con=CON)
+
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        print('get match, ', i)
+        res = requests.post('http://description_analyzer:8000/match_vacancy_resume',
+                        json={
+                          "vacancy": str(row.vac_descr),
+                          "resume": str(row.resume)
+                        }, timeout=100)
+        d = res.json()
+        match = int(d['match'])
+        df = pd.DataFrame([{'metric': match , 'vac_id':row.vac_id, 'resume_id': row.resume_id, 'site':row.site}])
+        print('df=',df)
+        df.to_sql('vacancy_resume_match', con=CON, if_exists='append', index=False)
         self.update_state(state='PROGRESS', meta={'done': int(100.0*i/df2.shape[0])})
 
     return 'DONE'

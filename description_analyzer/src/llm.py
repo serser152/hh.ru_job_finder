@@ -51,24 +51,43 @@ DESC = """
 Корпоративная пенсионная программа"""
 
 SYS_PROMPT = """
-Например:
-Работать с современными LLM в бизнес‑контексте (agents, prompt‑engineering, tools, structured output, fine‑tuning)
+Ты - hr-специалист. Ты должен анализировать вакансии и резюме.
+Выпиши ключевые навыки по одному в строке, без тире, маленькими буквами.
 
+Например:
+
+Текст:
+'''
+Работать с современными LLM в бизнес‑контексте (agents, prompt‑engineering, tools, structured output, fine‑tuning)
+'''
 Ответ:
+'''
 LLM
 prompt engineering
 tools
 agents
 structured output
 fine-tuning
+'''
 """
 
-
+SYS_PROMPT_MATCHER = """
+Ты - hr-специалист. Ты должен анализировать вакансии и резюме.
+Напиши число насколько процентов требования вакансии соответствуют навыкам в резюме.
+Ответ должен содержать только число в диапазоне 0-100.
+0 - резюме не подходит для вакансии.
+100 - резюме полностью подходит под требования вакансии.
+"""
 
 def parse_desc(desc: str) -> str:
-    """Parse description to list of keywords"""
+    return parse_skills(desc)
 
 
+def parse_resume(desc: str) -> str:
+    return parse_skills(desc)
+
+
+def init_llm():
     load_dotenv(find_dotenv())
 
     api_key = environ.get("OPENROUTER_API_KEY","")
@@ -86,19 +105,43 @@ def parse_desc(desc: str) -> str:
     else:
         print('Unknown llm type')
         raise UnknownModelException('Unknown llm type')
+    return llm
 
+def parse_skills(desc: str) -> str:
+    """Parse description to list of keywords"""
+
+    llm = init_llm()
 
     prompt = [
-        SystemMessage(content="Ты - hr-специалист. Ты должен анализировать вакансии и резюме."
-            "Выделять ключевые навыки. Писать на русском языке." + SYS_PROMPT),
-        HumanMessage(content="Описание вакансии: " + desc + \
-        ". Выпиши ключевые навыки по одному в строке, без тире маленькими буквами.")]
+        SystemMessage(content=SYS_PROMPT),
+        HumanMessage(content=f"Текст: '''{desc}''' Ответ:")]
 
     try_cnt = 5
     while try_cnt > 0:
         try:
             res = llm.invoke(prompt)
             print(res.content)
+            return res.content
+        except RateLimitError:
+            try_cnt -= 1
+            sleep(10)
+    return ""
+
+
+def match_vacancy_cv(vacansy: str, cv: str) -> str:
+    """Parse description to list of keywords"""
+
+    llm = init_llm()
+
+    prompt = [
+        SystemMessage(content=SYS_PROMPT_MATCHER),
+        HumanMessage(content=f"Текст вакансии: '''{vacansy}'''\n Текст резюме:'''{cv}'''")]
+
+    try_cnt = 5
+    while try_cnt > 0:
+        try:
+            res = llm.invoke(prompt)
+            #print(res.content)
             return res.content
         except RateLimitError:
             try_cnt -= 1

@@ -1,4 +1,4 @@
-FROM selenium/standalone-firefox
+FROM selenium/standalone-firefox:129.0-20260404
 
 WORKDIR /src
 COPY requirements.txt /src
