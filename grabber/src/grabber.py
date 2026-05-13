@@ -310,12 +310,6 @@ class HHGrabber(Grabber):
         sleep(2)
         qa_txt = 'vacancy-response-link-top'
         rs = self.driver.find_elements(By.CSS_SELECTOR, f'[data-qa="{qa_txt}"]')
-        for r in rs:
-            print(r)
-            try:
-                print(r.text)
-            except:
-                pass
         r=rs[0]
         sleep(2)
         href = r.get_attribute('href')
