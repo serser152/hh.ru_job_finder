@@ -49,7 +49,7 @@ async def parse_resumes(request: ParseDescriptionRequest):
 @app.post('/match_vacancy_resume')
 async def match(request: MatchRequest):
     'Get vacancies list and returns json'
-    print('Matcher\n---------\n',request.vacancy, request.resume)
+    print('Matcher\n---------\n',request.vacancy)
     res = match_vacancy_cv(request.vacancy, request.resume)
     print(f'res = {res}')
     return {'match': res}

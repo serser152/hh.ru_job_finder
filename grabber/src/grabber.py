@@ -239,6 +239,8 @@ class HHGrabber(Grabber):
             status = 'Откликнуться'
         elif status.startswith('Вам отказали'):
             status = 'Отказ'
+        elif status.startswith('Вас пригласили'):
+            status = 'Вас пригласили'
 
         d = {
             'vac_id': vac_id,
@@ -292,7 +294,8 @@ class HHGrabber(Grabber):
         }
         # remove prefixes
         if d['vac_exp']:
-            d['vac_exp'] = d['vac_exp'].replace('Опыт работы: ','').replace('Опыт ','')
+            d['vac_exp'] = d['vac_exp'].replace('Опыт работы: ','')
+            d['vac_exp'] = d['vac_exp'].replace('Опыт ', '')
         if d['vac_hiring_format']:
             d['vac_hiring_format'] = d['vac_hiring_format'].replace('Оформление: ','')
         if d['vac_work_format']:
