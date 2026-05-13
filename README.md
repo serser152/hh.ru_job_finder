@@ -6,8 +6,9 @@
   - Market analysis (vacancy count, main companies, job parameters)
   - Find and respond to vacancies
   - Vacancies skills analysis
-  - Automatic vacancies matching/responsing (TBD)
-
+  - Vacancy-resume matching and mass respond with company filter
+  - Automatic vacancies matching/respond
+  
 ## Supported sites
   - hh.ru
   - zarplata.ru
@@ -62,6 +63,9 @@ table in fullscreen mode
 ![6](images/example6.png)
 #### count bar chart 
 ![7](images/example7.png)
+
+#### CV tab
+![9](images/example9.png)
 
 ### Grafana charts
 

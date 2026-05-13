@@ -34,19 +34,17 @@ def display_data_tab():
     """
         Display data tab
     """
-    st.markdown('## Assistant for job search')
-
-    with st.spinner("Loading last data..."):
+    with st.spinner("Загружаем последние скачанные вакансии..."):
         data = get_last_data_with_metric(resume_id=st.session_state.get('resume_id', None))
         filter_df = get_filter_df()
         filter_txt = '\n'.join(filter_df.company_mask.to_list())
         # filter masks
-        new_filter_txt = st.text_area('Filter (mask for company names):', filter_txt)
+        new_filter_txt = st.text_area('Фильтр(в каждой строке часть имени нежелательной компании):', filter_txt)
 
         company_mask_list = new_filter_txt.split('\n')
         new_filter_df = pd.DataFrame(company_mask_list, columns=['company_mask'])
         # update button
-        if st.button('✅ Save filter'):
+        if st.button('✅ Сохранить фильтр'):
             update_filter_df(edited_df=new_filter_df)
 
         # company filter
@@ -59,7 +57,7 @@ def display_data_tab():
         data2 = data[data['metric'] >= min_metric].sort_values('metric',ascending=False)
         view_cols = st.multiselect('Columns', columns,
                                    default=['link','vac_company','title','status','metric'])
-        st.dataframe(data2[view_cols], width='content', height='content',
+        st.dataframe(data2[view_cols], width='content', height='auto',
                  column_config={
                      "link": st.column_config.LinkColumn(
                          "link", display_text="🌐"
@@ -67,7 +65,7 @@ def display_data_tab():
                  },
                  )
 
-        if st.button('Respond all vacancies'):
+        if st.button('Откликнуться на вакансии из таблицы'):
             data3 = data2[data2['status'] == 'Откликнуться']
             df = get_active_searches()
             data3 = data3.merge(df, on='site')
@@ -78,13 +76,13 @@ def display_cv_tab():
     """
         Display cv tab
     """
-    st.markdown('## CV')
+    st.markdown('## Резюме')
 
-    with st.spinner("Loading last data..."):
+    with st.spinner("Грузим данные..."):
         data = get_cv_data()
 
         if data.size == 0:
-            txt = st.text_area('CV text:', value='')
+            txt = st.text_area('Текст резюме:', value='')
             if st.button('+'):
                 add_cv(txt)
                 st.rerun()
@@ -105,25 +103,25 @@ def display_cv_tab():
             txt = data[data['resume_id'] == new_resume_id]['resume'][0]
             st.session_state['resume_id'] = new_resume_id
 
-            new_txt = st.text_area('CV:', txt)
+            new_txt = st.text_area('Резюме:', txt)
 
             # show list of skills
             skills = get_cv_skills(new_resume_id)
             # show skills list
             if len(skills) > 0:
-                st.write('Skills:')
-                st.dataframe(skills)
+                st.write('Навыки:')
+                st.dataframe(skills, height=200)
 
             # analyse button
-            if st.button('Analyse CV'):
+            if st.button('Вытащить навыки из резюме'):
                 process_resumes.delay(data.to_json(orient='records'))
 
             # vacancy matching button
-            if st.button('Run vacancy matching'):
+            if st.button('Запуск сверки резюме с вакансиями'):
                 vacancy_matching.delay()
 
             # save button
-            if st.button('✅ '):
+            if st.button('✅ Сохранить резюме'):
                 update_cv(new_resume_id, new_txt)
             # update button
             if st.button('+'):
@@ -133,14 +131,14 @@ def display_cv_tab():
 
 def display_settings_tab():
     """
-        Display settings tab
+        Вкладка настроек
     """
-    with st.spinner("Loading active searches..."):
+    with st.spinner("Загружаем таблицу настроек..."):
         df = get_active_searches()
 
     i = app.control.inspect()
 
-    st.markdown('### Active searches')
+    st.markdown('### Активные поиски')
     edited_df = st.data_editor(df, num_rows="dynamic")
 
     # get active jobs status
@@ -157,32 +155,30 @@ def display_settings_tab():
     else:
         jobs = []
 
-    st.write('Active tasks:')
+    st.write('Активные задачи:')
 
     # display statuses
     for j in jobs:
         st.write(j['name'],'-',j['status'],'%')
 
-    if st.button('▶️  Get vacancies'):
+    if st.button('▶️  Загрузить вакансии'):
         grab.delay(edited_df.to_json(orient='records'))
-    if st.button('▶️  Get descriptions'):
+    if st.button('▶️  Ручная загрузка описаний вакансий'):
         grab_description.delay(edited_df.to_json(orient='records'))
-    if st.button('▶️  Test job'):
-        grab2.delay(edited_df.to_json(orient='records'))
-    if st.button('▶️  parse vacancies skills'):
+    if st.button('▶️  Запустить парсинг требований вакансий'):
         with st.spinner("Loading last data..."):
             data = get_empty_descriptions_data()
             data = data[['vac_id', 'site', 'vac_descr']]
         process_description.delay(data.to_json(orient='records'))
 
-    if st.button('🗑️ remove last load'):
+    if st.button('🗑️ Удалить последнюю загрузку вакансий'):
         with st.spinner('deleting in progress'):
             del_last_data()
-    if st.button('✅ Save'):
-        with st.spinner('Saving'):
+    if st.button('✅ Сохранить таблицу настроек'):
+        with st.spinner('Сохранение...'):
             update_db_df(edited_df)
-    if st.button(' Initialize DB'):
-        with st.spinner('🧨 Initializing DB'):
+    if st.button(' Инициализировать БД'):
+        with st.spinner('🧨 Инициализация БД...'):
             init_db()
 
     st.link_button('Grafana Monitor&Analysis', 'http://localhost:3000')
@@ -195,7 +191,7 @@ def display_count_by_tab():
     with st.spinner("Loading last data..."):
         data = get_last_data()
     columns = data.columns
-    agg_col = st.selectbox('Count vacancies by:',columns, index=0)
+    agg_col = st.selectbox('Количество вакансий по:',columns, index=0)
     data2 = data.groupby(agg_col).agg({'vac_id':'count'}).reset_index()
     data3 = data2.sort_values('vac_id',ascending=False).head(10)
     st.bar_chart(data3,x=agg_col,y='vac_id', horizontal=True, sort='-vac_id')
@@ -205,15 +201,15 @@ def display_count_by_tab():
 
 
 
-st.title('Job finder')
+st.title('Ассистент поиска работы')
 
 resume_id = st.session_state.get('resume_id', 0)
 
 tab_settings,tab_data, tab_count_by, tab_cv = st.tabs([
-    'Settings',
-    'Data',
-    'Vacancies count by company',
-    'CV',
+    'Настройки',
+    'Таблица вакансий',
+    'Аналитика по вакансиям',
+    'Резюме',
 ])
 
 with st.spinner("Check db..."):
