@@ -8,6 +8,11 @@ CREATE TABLE if not exists  public.vacancies (
     link text
 );
 
+CREATE TABLE if not exists  public.vacancy_filter (
+    company_mask varchar not null
+)
+
+
 CREATE TABLE if not exists  public.vacancy_descriptions (
     vacancy_id serial primary key,
     vac_id character varying,
