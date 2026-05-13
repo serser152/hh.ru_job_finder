@@ -21,7 +21,7 @@ class AcceptRequest(BaseModel):
     site: str
     phone: str
     password: str
-    vacancy_id: list
+    vacancy_ids: list
     cover_letter:str
 
 class GetDescriptionRequest(BaseModel):
@@ -63,8 +63,9 @@ async def get_desc(request: GetDescriptionRequest):
 
 
 @app.post('/accept_vacancy')
-async def accept_vacancy_by_id(request: GetDescriptionRequest):
+async def accept_vacancy_by_id(request: AcceptRequest):
     """Respond to vacancy by id"""
     print('accept vacancies ' + str(request.vacancy_ids))
     grabber = GrabberFactory().create_grabber(request.site, request.phone, request.password)
-    grabber.respond_to_vacancy(request.vacancy_id, request.cover_letter)
+    for vacancy_id in request.vacancy_ids:
+        grabber.respond_to_vacancy(vacancy_id, request.cover_letter)

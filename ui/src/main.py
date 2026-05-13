@@ -3,7 +3,7 @@
 """
 User interface module
 """
-
+import pandas as pd
 import streamlit as st
 from tasks import (
     grab,
@@ -23,6 +23,9 @@ from tasks import (
     process_description,
     process_resumes,
     vacancy_matching,
+    respond_vacancies,
+    get_filter_df,
+    update_filter_df,
     app, get_cv_skills)
 
 
@@ -35,15 +38,41 @@ def display_data_tab():
 
     with st.spinner("Loading last data..."):
         data = get_last_data_with_metric(resume_id=st.session_state.get('resume_id', None))
+        filter_df = get_filter_df()
+        filter_txt = '\n'.join(filter_df.company_mask.to_list())
+        # filter masks
+        new_filter_txt = st.text_area('Filter (mask for company names):', filter_txt)
+
+        company_mask_list = new_filter_txt.split('\n')
+        new_filter_df = pd.DataFrame(company_mask_list, columns=['company_mask'])
+        # update button
+        if st.button('✅ Save filter'):
+            update_filter_df(edited_df=new_filter_df)
+
+        # company filter
+        for i in company_mask_list:
+            data = data[~data['vac_company'].str.contains(i)]
         columns = data.columns
-        view_cols = st.multiselect('Columns', columns)
-        st.dataframe(data[view_cols],
+
+        # slider metric
+        min_metric = st.slider('Соответствие резюме', 0, 100, 90)
+        data2 = data[data['metric'] >= min_metric].sort_values('metric',ascending=False)
+        view_cols = st.multiselect('Columns', columns,
+                                   default=['link','vac_company','title','status','metric'])
+        st.dataframe(data2[view_cols], width='content', height='content',
                  column_config={
                      "link": st.column_config.LinkColumn(
                          "link", display_text="🌐"
                      ),
                  },
                  )
+
+        if st.button('Respond all vacancies'):
+            data3 = data2[data2['status'] == 'Откликнуться']
+            df = get_active_searches()
+            data3 = data3.merge(df, on='site')
+            respond_vacancies.delay(data3.to_json(orient='records'))
+
 
 def display_cv_tab():
     """

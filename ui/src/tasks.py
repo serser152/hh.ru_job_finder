@@ -66,6 +66,17 @@ def update_db_df(edited_df):
     edited_df.to_sql('searches', con=CON, index=False, if_exists='replace')
 
 
+def update_filter_df(edited_df):
+    """update vacancy filter table"""
+    edited_df.to_sql('vacancy_filter', con=CON, index=False, if_exists='replace')
+
+
+def get_filter_df():
+    """update vacancy filter table"""
+    df = pd.read_sql('select * from vacancy_filter',CON)
+    return df
+
+
 def get_last_data():
     """get last data """
     df2 = pd.read_sql('''select * from vacancies_last_values h1''', con=CON)
@@ -105,6 +116,18 @@ def del_last_data():
            FROM vacancies hd));''')
     conn.commit()
     conn.close()
+
+
+def set_respond_status(vac_id, site):
+    """del last data grabbed"""
+    conn = psycopg2.connect(CON)
+    cur = conn.cursor()
+    cur.execute(f'''
+    update vacancies set status = 'Отклик'
+     WHERE vac_id = '{vac_id}'   and site = '{site}';''')
+    conn.commit()
+    conn.close()
+
 
 
 def init_db():
@@ -213,9 +236,38 @@ def grab_site(site, phone, password, request):
     grab_new_vac_desc(site, phone, password)
 
 
+def respond_vacancy_on_site(site, phone, password, vac_ids, cover_letter):
+    """respond vacancies with cover letter"""
+    phone = str(phone)
+    print('first try')
+
+    jsn={
+          "site": site,
+          "phone": phone,
+          "password": password,
+          "vacancy_ids": vac_ids,
+          "cover_letter": cover_letter
+    }
+
+    res = requests.post('http://grabber:8000/accept_vacancy',
+                    json=jsn, timeout=2400)
+
+    max_try = MAX_RETRY
+
+    while not res.ok:
+        if max_try == 0:
+            raise ScrapingException('API max retries reached')
+        #wait 1 min
+        sleep(60)
+        # request again
+        res = requests.post('http://grabber:8000/accept_vacancy',
+                    json=jsn, timeout=2400)
+        max_try -= 1
+
+
 @app.task(bind=True)
 def grab(self, df):
-    '''grab vacancies using sources from dataframe df'''
+    """grab vacancies using sources from dataframe df"""
     df2=pd.read_json(StringIO(df))
     print('grab job started')
     self.update_state(state='PROGRESS', meta={'done': 0})
@@ -233,7 +285,7 @@ def grab(self, df):
 
 @app.task(bind=True)
 def grab_description(self, df):
-    '''grab vacancies using sources from dataframe df'''
+    """grab vacancies using sources from dataframe df"""
     df2=pd.read_json(StringIO(df))
     print('grab job started')
     self.update_state(state='PROGRESS', meta={'done': 0})
@@ -247,6 +299,20 @@ def grab_description(self, df):
         #self.update_state(state='PROGRESS', meta={'done': int(100.0*i/len(df2))})
     return 'DONE'
     #self.update_state(state='SUCCESS', meta={'done': 100.0 * i / len(df2)})
+
+@app.task(bind=True)
+def respond_vacancies(self, df):
+    """respond vacancies task"""
+    df2=pd.read_json(StringIO(df))
+    print('respond job started')
+    self.update_state(state='PROGRESS', meta={'done': 0})
+    for i,row in df2.iterrows():
+        print(f' {i} accepting {row.link}')
+        respond_vacancy_on_site(row.site, row.phone, row.password, [row.vac_id,], "")
+        set_respond_status(row.vac_id, row.site)
+        self.update_state(state='PROGRESS', meta={'done': int(100.0*i/len(df2))})
+    return 'DONE'
+
 
 @app.task(bind=True)
 def grab2(self,df):
