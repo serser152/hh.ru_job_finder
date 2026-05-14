@@ -7,7 +7,6 @@ import pandas as pd
 import streamlit as st
 from tasks import (
     grab,
-    grab2,
     grab_description,
     get_last_data,
     update_cv,
@@ -29,7 +28,6 @@ from tasks import (
     app, get_cv_skills)
 
 
-
 def display_data_tab():
     """
         Display data tab
@@ -39,7 +37,10 @@ def display_data_tab():
         filter_df = get_filter_df()
         filter_txt = '\n'.join(filter_df.company_mask.to_list())
         # filter masks
-        new_filter_txt = st.text_area('Фильтр(в каждой строке часть имени нежелательной компании):', filter_txt)
+        new_filter_txt = st.text_area(
+            'Фильтр(в каждой строке часть имени нежелательной компании):',
+            filter_txt
+        )
 
         company_mask_list = new_filter_txt.split('\n')
         new_filter_df = pd.DataFrame(company_mask_list, columns=['company_mask'])
