@@ -65,7 +65,8 @@ async def get_desc(request: GetDescriptionRequest):
 @app.post('/accept_vacancy')
 async def accept_vacancy_by_id(request: AcceptRequest):
     """Respond to vacancy by id"""
-    print('accept vacancies ' + str(request.vacancy_ids))
+    print('respond to vacancies ' + str(request.vacancy_ids))
     grabber = GrabberFactory().create_grabber(request.site, request.phone, request.password)
     for vacancy_id in request.vacancy_ids:
+        print('respond to vacancy ' + str(vacancy_id))
         grabber.respond_to_vacancy(vacancy_id, request.cover_letter)

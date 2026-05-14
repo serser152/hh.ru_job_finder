@@ -124,7 +124,8 @@ def set_respond_status(vac_id, site):
     cur = conn.cursor()
     cur.execute(f'''
     update vacancies set status = 'Отклик'
-     WHERE vac_id = '{vac_id}'   and site = '{site}';''')
+     WHERE vac_id = '{vac_id}'   and site = '{site}'
+     and dt in (select distinct dt from vacancies_last_values vlv);''')
     conn.commit()
     conn.close()
 
@@ -306,11 +307,16 @@ def respond_vacancies(self, df):
     df2=pd.read_json(StringIO(df))
     print('respond job started')
     self.update_state(state='PROGRESS', meta={'done': 0})
-    for i,row in df2.iterrows():
-        print(f' {i} accepting {row.link}')
-        respond_vacancy_on_site(row.site, row.phone, row.password, [row.vac_id,], "")
-        set_respond_status(row.vac_id, row.site)
-        self.update_state(state='PROGRESS', meta={'done': int(100.0*i/len(df2))})
+    for site in df2['site'].unique():
+
+        ids = df2[df2.site == site].vac_id.to_list()
+        print(f'Process site {site}, ids={ids}')
+        phone = df2[df2.site == site].phone.iloc[0]
+        password = df2[df2.site == site].password.iloc[0]
+        respond_vacancy_on_site(site, phone, password, ids, "")
+        for vac_id in ids:
+            set_respond_status(vac_id, site)
+
     return 'DONE'
 
 
